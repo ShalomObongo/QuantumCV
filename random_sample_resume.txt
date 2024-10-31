@@ -1,0 +1,89 @@
+John Doe
+Springfield, USA
+Email: johndoe@gmail.com | LinkedIn: https://www.linkedin.com/in/johndoe
+GitHub: https://github.com/JohnDoe | Phone: +1 123 456 7890
+
+About Me
+Innovative software developer and entrepreneur creating scalable digital solutions. As Founder and Lead Developer of Doe Digital Solutions, I excel in managing teams and delivering impactful tech solutions. My expertise spans web and mobile development, enhancing efficiency and user engagement. Combining technical skills with project management, I deliver high-quality software while pursuing a Computer Science degree at Springfield University. This blend of experience, leadership, and academic knowledge equips me to tackle complex challenges and drive business growth.
+
+Education
+Bachelor's Degree in Computer Science
+Springfield University, Springfield (Grade: B)
+Expected Graduation Year: 2025
+
+High School Diploma
+Springfield High School (Grade: A-)
+Graduation Year: 2020
+
+Experience
+Founder & Lead Developer
+Doe Digital Solutions (2024 - Present)
+Location: Springfield, USA | Industry: Software Development & Fintech
+
+- Lead a finance and technology startup focused on delivering innovative software solutions and technology consulting for local businesses
+- Lead a team of part-time developers in delivering web and mobile applications using Next.js, Node.js, and other modern technologies
+- Oversee complete project lifecycle from client requirements to final delivery
+- Manage software development projects focusing on financial technologies and strategic IT consulting
+- Drive technical decision-making and maintain high standards in development practices
+
+Key Achievements:
+- Successfully delivered multiple software projects for local clients
+- Built and managed client relationships while ensuring timely project delivery
+- Established efficient development processes and technical standards
+
+Director of Technology
+Doe Enterprises (2022 - Present)
+Location: Springfield, USA | Industry: E-commerce & Digital Marketing
+
+- Lead the technological transformation of a bottled water business, focusing on operational efficiency and customer experience enhancement
+- Spearhead technology implementation to improve operational efficiency
+- Lead development of automated systems including POS integration
+- Manage business development strategies leveraging technology
+
+Key Achievements:
+- Introduced tech solutions that increased operational efficiency
+- Implemented customer feedback systems for service improvement
+
+Projects
+Doe Digital Solutions Website
+Developed a comprehensive fintech startup website featuring a blog, form submission system, and pricing details.
+Technologies: HTML, CSS, JavaScript
+Role: Lead Developer
+Link: https://doedigitalsolutions.com
+
+Doe Enterprises
+Developed an e-commerce website for a bottled water business, featuring advanced notification and payment systems to enhance customer experience and streamline transactions.
+Technologies: React, Node.js, Mpesa API, Whatsapp API, Firebase
+Link: https://doeenterprises.co
+
+Student-Sphere
+Created an all-in-one mobile application using React Native, allowing students to access study materials, ask questions, chat with tutors and peers, create task lists, and more.
+Technologies: React Native, Firebase
+Link: https://github.com/JohnDoe/Student-Sphere
+
+Student-Zone
+Built a cutting-edge educational web app offering a suite of AI-powered tools to support students' learning, including PDF summaries, question generators, chatbots, and more.
+Technologies: Next.js, Node.js, TensorFlow.js, Gemini API, Groq API
+Link: https://studentszone.vercel.app
+
+Skills
+Technical Skills: Next.js, Node.js, React Native, Python, Web Development, Mobile App Development, AI Integration, System Integration, API, UI/UX Design
+Soft Skills: Project Management, Team Leadership, Business Development, Client Relations
+
+Achievements
+- Successfully delivered multiple software projects for local clients at Doe Digital Solutions
+- Introduced tech solutions that significantly increased operational efficiency at Doe Enterprises
+- Founded and led Doe Digital Solutions while pursuing a Computer Science degree
+
+Certifications
+- CCNA - Networks (Cisco, 2023)
+- Python 3 Certification (Codecademy, 2022)
+
+Languages
+English - Native
+Spanish - Intermediate
+French - [Proficiency level not specified]
+
+
+Interests
+Full-Stack Development, Software Architecture, Fintech Solutions, Artificial Intelligence, Cloud Technologies
