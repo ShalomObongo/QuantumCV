@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/Dash.png" width="100%" alt="Dash Banner"/>
+<img src="/Dash.png" width="100%" alt="Dash Banner"/>
 
 # 🌟 QuantumCV
 
