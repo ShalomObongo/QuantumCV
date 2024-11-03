@@ -128,52 +128,44 @@ Important requirements for tailoring:
    - Keep all contact details and social links, but prioritize relevant professional profiles
 
 2. PROFESSIONAL SUMMARY
-   - Rewrite to directly address the job requirements
-   - Highlight skills and experiences that match the role
-   - Use relevant industry keywords from the job description
-   - Focus on achievements that demonstrate required competencies
+   - Completely rewrite to directly target the job requirements
+   - Feel free to emphasize and amplify relevant experiences
+   - Use strong industry keywords from the job description
+   - Present the candidate as an ideal fit for the role
 
 3. WORK EXPERIENCE
-   - Reorder positions to highlight most relevant roles first
-   - Rewrite bullet points to emphasize experiences matching job requirements
-   - Use similar terminology from the job description
-   - Quantify achievements that relate to the role
-   - Highlight leadership/technical/other skills mentioned in job description
-   - Focus on projects and responsibilities that align with the role
+   - Significantly rewrite and enhance bullet points to match job requirements
+   - Feel free to reframe past experiences to better align with the target role
+   - Amplify relevant achievements and downplay irrelevant ones
+   - Add industry-specific context to generic experiences
+   - Use similar terminology and buzzwords from the job description
+   - Expand on relevant projects/responsibilities that match the role
 
 4. EDUCATION
-   - Highlight relevant coursework or projects that align with the job
-   - Emphasize education aspects that match job requirements
+   - Reframe educational experiences to highlight relevance
+   - Add emphasis to courses/projects that align with job requirements
 
 5. PROJECTS
-   - Reorder to showcase most relevant projects first
-   - Emphasize technologies and skills mentioned in job description
-   - Highlight outcomes that demonstrate required competencies
-   - Focus on aspects that match job requirements
+   - Significantly enhance descriptions of relevant projects
+   - Add technical details that match job requirements
+   - Emphasize outcomes that demonstrate required competencies
 
 6. SKILLS
-   - Reorder technical skills to match job requirements first
-   - Use similar terminology from job description
-   - Group skills by relevance to the role
-   - Ensure all required skills from job description are included (if present in original)
+   - Rewrite technical skills using job description terminology
+   - Add relevant implied skills from experiences
+   - Prioritize and emphasize skills mentioned in job description
 
 7. ACHIEVEMENTS
-   - Prioritize achievements that demonstrate required competencies
-   - Focus on results that would matter most for this role
-
-8. CERTIFICATIONS
-   - Highlight certifications most relevant to the role first
-
-9. LANGUAGES & INTERESTS
-   - Include all but emphasize those relevant to the role
+   - Reframe achievements to highlight relevance to the role
+   - Enhance descriptions of relevant accomplishments
 
 Critical requirements:
-1. DO NOT fabricate or add any experience not in the original resume but feel free to tweak the existing experiences a little to match the job description
-2. DO NOT mention the company name or specific job title from the job description
-3. Maintain all dates and factual information from the original resume
-4. Keep everything professional and don't deviate too far from the truth
-5. Use natural language that flows well
-6. Focus on transferable skills when direct experience isn't present
+1. While you can significantly enhance and reframe experiences, DO NOT invent completely new experiences
+2. DO NOT mention specific company names or job titles from the job description
+3. Maintain general timeline accuracy but feel free to emphasize different aspects of each role
+4. Focus on making the candidate appear as qualified as possible while staying truthful
+5. Use natural, confident language
+6. Be creative in finding transferable skills and relevant angles
 7. RESPOND ONLY WITH THE JSON OBJECT, NO MARKDOWN` :
         `Create a professional and modern resume from the following text. Format it into clear sections with proper spacing and hierarchy.
         `;
