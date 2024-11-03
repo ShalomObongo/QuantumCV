@@ -2,170 +2,89 @@
 
 <img src="/Dash.png" width="100%" alt="Dash Banner"/>
 
-<div style="perspective: 1000px;">
-  <div style="transform-style: preserve-3d; animation: float 6s ease-in-out infinite;">
-    <h1 style="font-size: 3em; text-shadow: 0 0 10px #00f2fe;">
-      🌌 QuantumCV | Next-Gen Document Generator 3000
-    </h1>
-  </div>
+<h1>
+  <img src="https://img.icons8.com/nolan/64/artificial-intelligence.png" width="32px" align="top" />
+  QuantumCV | Next-Gen Document Generator 3000
+  <img src="https://img.icons8.com/nolan/64/artificial-intelligence.png" width="32px" align="top" />
+</h1>
+
+<div>
+  <a href="https://nodejs.org">
+    <img src="https://img.shields.io/badge/node-%3E%3D%2014.0.0-brightgreen?style=for-the-badge&logo=node.js&logoColor=white&labelColor=000000"/>
+  </a>
+  <a href="https://ai.google.dev/">
+    <img src="https://img.shields.io/badge/powered%20by-Gemini%20Pro-blue?style=for-the-badge&logo=google&logoColor=white&labelColor=000000"/>
+  </a>
+  <a href="LICENSE">
+    <img src="https://img.shields.io/badge/License-ISC-purple?style=for-the-badge&labelColor=000000"/>
+  </a>
+  <a href="https://github.com/ShalomObongo/quantumcv/graphs/commit-activity">
+    <img src="https://img.shields.io/badge/Maintained%3F-yes-green.svg?style=for-the-badge&labelColor=000000"/>
+  </a>
 </div>
 
-<style>
-@keyframes float {
-  0%, 100% { transform: translateY(0) rotateX(0); }
-  50% { transform: translateY(-20px) rotateX(5deg); }
-}
+<br />
 
-@keyframes glow {
-  0%, 100% { filter: drop-shadow(0 0 5px #00f2fe); }
-  50% { filter: drop-shadow(0 0 20px #4facfe); }
-}
+> 🚀 Creating Tomorrow's Documents, Today
 
-@keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-}
-
-@keyframes rotate3d {
-  0% { transform: rotate3d(1, 1, 1, 0deg); }
-  100% { transform: rotate3d(1, 1, 1, 360deg); }
-}
-
-@keyframes matrixRain {
-  0% { background-position: 0% 0%; }
-  100% { background-position: 0% 100%; }
-}
-
-.quantum-card {
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(0, 242, 254, 0.3);
-  border-radius: 15px;
-  padding: 20px;
-  margin: 20px 0;
-  animation: glow 3s ease-in-out infinite;
-  transition: transform 0.3s ease;
-}
-
-.quantum-card:hover {
-  transform: translateY(-5px) scale(1.02);
-  border-color: rgba(0, 242, 254, 0.8);
-}
-
-.matrix-bg {
-  background: linear-gradient(180deg, 
-    rgba(0,0,0,0) 0%,
-    rgba(0,242,254,0.1) 50%,
-    rgba(0,0,0,0) 100%
-  );
-  background-size: 100% 300%;
-  animation: matrixRain 20s linear infinite;
-}
-
-.rotating-icon {
-  animation: rotate3d 10s linear infinite;
-  transform-style: preserve-3d;
-}
-
-.pulse-effect {
-  animation: pulse 2s ease-in-out infinite;
-}
-</style>
-
-<div class="quantum-card">
-  <div style="display: flex; justify-content: center; gap: 10px;">
-    <a href="https://nodejs.org" class="pulse-effect">
-      <img src="https://img.shields.io/badge/node-%3E%3D%2014.0.0-brightgreen?style=for-the-badge&logo=node.js&logoColor=white&labelColor=000000"/>
-    </a>
-    <a href="https://ai.google.dev/" class="pulse-effect">
-      <img src="https://img.shields.io/badge/powered%20by-Gemini%20Pro-blue?style=for-the-badge&logo=google&logoColor=white&labelColor=000000"/>
-    </a>
-    <a href="LICENSE" class="pulse-effect">
-      <img src="https://img.shields.io/badge/License-ISC-purple?style=for-the-badge&labelColor=000000"/>
-    </a>
-    <a href="https://github.com/ShalomObongo/quantumcv/graphs/commit-activity" class="pulse-effect">
-      <img src="https://img.shields.io/badge/Maintained%3F-yes-green.svg?style=for-the-badge&labelColor=000000"/>
-    </a>
-  </div>
-</div>
-
-<div class="quantum-card matrix-bg">
-  <h3 style="text-shadow: 0 0 10px #00f2fe;">🚀 Creating Tomorrow's Documents, Today</h3>
-  <img width="800" src="https://raw.githubusercontent.com/yourusername/quantumcv/main/assets/demo.gif" style="border-radius: 10px; box-shadow: 0 0 30px rgba(0, 242, 254, 0.5);"/>
-</div>
+<img width="800" src="https://raw.githubusercontent.com/yourusername/quantumcv/main/assets/demo.gif"/>
 
 </div>
 
 ---
 
 <div align="center">
-
-## 🌟 Quantum Features Matrix
-
+<h2>🌟 Quantum Features Matrix</h2>
 </div>
 
-<div class="quantum-card">
 <table align="center">
 <tr>
 <td align="center" width="33%">
-<div class="rotating-icon">
-<img src="https://img.icons8.com/nolan/64/artificial-intelligence.png"/>
-</div>
+<img src="https://img.icons8.com/nolan/64/artificial-intelligence.png" width="48px"/>
 <br/>
-<b style="text-shadow: 0 0 5px #00f2fe;">Neural Document Generation</b>
+<b>Neural Document Generation</b>
 <br/>
 Harness Gemini Pro's quantum AI
 </td>
 <td align="center" width="33%">
-<div class="rotating-icon">
-<img src="https://img.icons8.com/nolan/64/code.png"/>
-</div>
+<img src="https://img.icons8.com/nolan/64/code.png" width="48px"/>
 <br/>
-<b style="text-shadow: 0 0 5px #00f2fe;">Adaptive Formatting</b>
+<b>Adaptive Formatting</b>
 <br/>
 Self-optimizing layouts
 </td>
 <td align="center" width="33%">
-<div class="rotating-icon">
-<img src="https://img.icons8.com/nolan/64/blockchain-technology.png"/>
-</div>
+<img src="https://img.icons8.com/nolan/64/blockchain-technology.png" width="48px"/>
 <br/>
-<b style="text-shadow: 0 0 5px #00f2fe;">Job-Specific Optimization</b>
+<b>Job-Specific Optimization</b>
 <br/>
 Real-time content adaptation
 </td>
 </tr>
 <tr>
 <td align="center">
-<div class="rotating-icon">
-<img src="https://img.icons8.com/nolan/64/design.png"/>
-</div>
+<img src="https://img.icons8.com/nolan/64/design.png" width="48px"/>
 <br/>
-<b style="text-shadow: 0 0 5px #00f2fe;">Quantum Styling</b>
+<b>Quantum Styling</b>
 <br/>
 Next-gen visual aesthetics
 </td>
 <td align="center">
-<div class="rotating-icon">
-<img src="https://img.icons8.com/nolan/64/cyber-security.png"/>
-</div>
+<img src="https://img.icons8.com/nolan/64/cyber-security.png" width="48px"/>
 <br/>
-<b style="text-shadow: 0 0 5px #00f2fe;">ATS Enhancement</b>
+<b>ATS Enhancement</b>
 <br/>
 AI-powered optimization
 </td>
 <td align="center">
-<div class="rotating-icon">
-<img src="https://img.icons8.com/nolan/64/launched-rocket.png"/>
-</div>
+<img src="https://img.icons8.com/nolan/64/launched-rocket.png" width="48px"/>
 <br/>
-<b style="text-shadow: 0 0 5px #00f2fe;">CLI Interface</b>
+<b>CLI Interface</b>
 <br/>
 Holographic command center
 </td>
 </tr>
-</table>
-</div>
+</table></div>
 
 ---
 
