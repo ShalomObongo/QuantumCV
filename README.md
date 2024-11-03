@@ -2,21 +2,96 @@
 
 <img src="/Dash.png" width="100%" alt="Dash Banner"/>
 
-# 🌌 QuantumCV | Next-Gen Document Generator 3000
-
-<div style="background: linear-gradient(45deg, #00f2fe, #4facfe); padding: 20px; border-radius: 10px; margin: 20px 0;">
-
-[![Node Version](https://img.shields.io/badge/node-%3E%3D%2014.0.0-brightgreen?style=for-the-badge&logo=node.js&logoColor=white&labelColor=000000)](https://nodejs.org)
-[![AI Engine](https://img.shields.io/badge/powered%20by-Gemini%20Pro-blue?style=for-the-badge&logo=google&logoColor=white&labelColor=000000)](https://ai.google.dev/)
-[![License](https://img.shields.io/badge/License-ISC-purple?style=for-the-badge&labelColor=000000)](LICENSE)
-[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg?style=for-the-badge&labelColor=000000)](https://github.com/ShalomObongo/quantumcv/graphs/commit-activity)
-
+<div style="perspective: 1000px;">
+  <div style="transform-style: preserve-3d; animation: float 6s ease-in-out infinite;">
+    <h1 style="font-size: 3em; text-shadow: 0 0 10px #00f2fe;">
+      🌌 QuantumCV | Next-Gen Document Generator 3000
+    </h1>
+  </div>
 </div>
 
-### 🚀 Creating Tomorrow's Documents, Today
+<style>
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotateX(0); }
+  50% { transform: translateY(-20px) rotateX(5deg); }
+}
 
-<div style="background: #000000; padding: 20px; border-radius: 10px; margin: 20px 0;">
-<img width="800" src="https://raw.githubusercontent.com/yourusername/quantumcv/main/assets/demo.gif"/>
+@keyframes glow {
+  0%, 100% { filter: drop-shadow(0 0 5px #00f2fe); }
+  50% { filter: drop-shadow(0 0 20px #4facfe); }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@keyframes rotate3d {
+  0% { transform: rotate3d(1, 1, 1, 0deg); }
+  100% { transform: rotate3d(1, 1, 1, 360deg); }
+}
+
+@keyframes matrixRain {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 0% 100%; }
+}
+
+.quantum-card {
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 242, 254, 0.3);
+  border-radius: 15px;
+  padding: 20px;
+  margin: 20px 0;
+  animation: glow 3s ease-in-out infinite;
+  transition: transform 0.3s ease;
+}
+
+.quantum-card:hover {
+  transform: translateY(-5px) scale(1.02);
+  border-color: rgba(0, 242, 254, 0.8);
+}
+
+.matrix-bg {
+  background: linear-gradient(180deg, 
+    rgba(0,0,0,0) 0%,
+    rgba(0,242,254,0.1) 50%,
+    rgba(0,0,0,0) 100%
+  );
+  background-size: 100% 300%;
+  animation: matrixRain 20s linear infinite;
+}
+
+.rotating-icon {
+  animation: rotate3d 10s linear infinite;
+  transform-style: preserve-3d;
+}
+
+.pulse-effect {
+  animation: pulse 2s ease-in-out infinite;
+}
+</style>
+
+<div class="quantum-card">
+  <div style="display: flex; justify-content: center; gap: 10px;">
+    <a href="https://nodejs.org" class="pulse-effect">
+      <img src="https://img.shields.io/badge/node-%3E%3D%2014.0.0-brightgreen?style=for-the-badge&logo=node.js&logoColor=white&labelColor=000000"/>
+    </a>
+    <a href="https://ai.google.dev/" class="pulse-effect">
+      <img src="https://img.shields.io/badge/powered%20by-Gemini%20Pro-blue?style=for-the-badge&logo=google&logoColor=white&labelColor=000000"/>
+    </a>
+    <a href="LICENSE" class="pulse-effect">
+      <img src="https://img.shields.io/badge/License-ISC-purple?style=for-the-badge&labelColor=000000"/>
+    </a>
+    <a href="https://github.com/ShalomObongo/quantumcv/graphs/commit-activity" class="pulse-effect">
+      <img src="https://img.shields.io/badge/Maintained%3F-yes-green.svg?style=for-the-badge&labelColor=000000"/>
+    </a>
+  </div>
+</div>
+
+<div class="quantum-card matrix-bg">
+  <h3 style="text-shadow: 0 0 10px #00f2fe;">🚀 Creating Tomorrow's Documents, Today</h3>
+  <img width="800" src="https://raw.githubusercontent.com/yourusername/quantumcv/main/assets/demo.gif" style="border-radius: 10px; box-shadow: 0 0 30px rgba(0, 242, 254, 0.5);"/>
 </div>
 
 </div>
@@ -29,61 +104,74 @@
 
 </div>
 
+<div class="quantum-card">
 <table align="center">
 <tr>
 <td align="center" width="33%">
+<div class="rotating-icon">
 <img src="https://img.icons8.com/nolan/64/artificial-intelligence.png"/>
+</div>
 <br/>
-<b>Neural Document Generation</b>
+<b style="text-shadow: 0 0 5px #00f2fe;">Neural Document Generation</b>
 <br/>
 Harness Gemini Pro's quantum AI
 </td>
 <td align="center" width="33%">
+<div class="rotating-icon">
 <img src="https://img.icons8.com/nolan/64/code.png"/>
+</div>
 <br/>
-<b>Adaptive Formatting</b>
+<b style="text-shadow: 0 0 5px #00f2fe;">Adaptive Formatting</b>
 <br/>
 Self-optimizing layouts
 </td>
 <td align="center" width="33%">
+<div class="rotating-icon">
 <img src="https://img.icons8.com/nolan/64/blockchain-technology.png"/>
+</div>
 <br/>
-<b>Job-Specific Optimization</b>
+<b style="text-shadow: 0 0 5px #00f2fe;">Job-Specific Optimization</b>
 <br/>
 Real-time content adaptation
 </td>
 </tr>
 <tr>
 <td align="center">
+<div class="rotating-icon">
 <img src="https://img.icons8.com/nolan/64/design.png"/>
+</div>
 <br/>
-<b>Quantum Styling</b>
+<b style="text-shadow: 0 0 5px #00f2fe;">Quantum Styling</b>
 <br/>
 Next-gen visual aesthetics
 </td>
 <td align="center">
+<div class="rotating-icon">
 <img src="https://img.icons8.com/nolan/64/cyber-security.png"/>
+</div>
 <br/>
-<b>ATS Enhancement</b>
+<b style="text-shadow: 0 0 5px #00f2fe;">ATS Enhancement</b>
 <br/>
 AI-powered optimization
 </td>
 <td align="center">
+<div class="rotating-icon">
 <img src="https://img.icons8.com/nolan/64/launched-rocket.png"/>
+</div>
 <br/>
-<b>CLI Interface</b>
+<b style="text-shadow: 0 0 5px #00f2fe;">CLI Interface</b>
 <br/>
 Holographic command center
 </td>
 </tr>
 </table>
+</div>
 
 ---
 
+<div class="quantum-card matrix-bg">
 <div align="center">
-
-## 🚀 Quantum Installation Protocol
-
+<h2 class="pulse-effect">🚀 Quantum Installation Protocol</h2>
 </div>
 
 ```bash
@@ -102,35 +190,45 @@ cp .env.example .env
 # Launch the quantum core
 node CVandCLbuilder.jsx
 ```
+</div>
 
 ---
 
+<div class="quantum-card">
 <div align="center">
-
-## 🌌 System Requirements
-
+<h2 class="pulse-effect">🌌 System Requirements</h2>
 </div>
 
 <table align="center">
 <tr>
 <td>
-<img src="https://img.icons8.com/nolan/32/nodejs.png"/> Node.js
+<div class="rotating-icon">
+<img src="https://img.icons8.com/nolan/32/nodejs.png"/>
+</div>
+Node.js
 </td>
 <td>v14.0.0+</td>
 </tr>
 <tr>
 <td>
-<img src="https://img.icons8.com/nolan/32/google-cloud.png"/> Gemini Pro API
+<div class="rotating-icon">
+<img src="https://img.icons8.com/nolan/32/google-cloud.png"/>
+</div>
+Gemini Pro API
 </td>
 <td>Active Key</td>
 </tr>
 <tr>
 <td>
-<img src="https://img.icons8.com/nolan/32/document.png"/> Resume Data
+<div class="rotating-icon">
+<img src="https://img.icons8.com/nolan/32/document.png"/>
+</div>
+Resume Data
 </td>
 <td>Text Format</td>
 </tr>
 </table>
+</div>
 
 ---
 
@@ -270,28 +368,69 @@ GOOGLE_API_KEY=your_quantum_key_here
 
 ---
 
+<div class="quantum-card matrix-bg">
 <div align="center">
 
 ## 📜 Quantum License
 
+<div class="rotating-icon">
+<img src="https://img.icons8.com/nolan/64/certificate.png"/>
+</div>
+
 This project exists in the ISC quantum realm - see the [LICENSE](LICENSE) file for details.
+
+</div>
+</div>
+
+<div class="quantum-card">
+<div align="center">
 
 ## 🙏 Quantum Acknowledgments
 
-- Google Gemini Pro Neural Core
-- PDFKit Quantum Engine
-- The Open-Source Quantum Community
+<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin: 20px 0;">
+  <div class="pulse-effect" style="text-align: center;">
+    <img src="https://img.icons8.com/nolan/64/google.png"/>
+    <p style="text-shadow: 0 0 5px #00f2fe;">Google Gemini Pro Neural Core</p>
+  </div>
+  <div class="pulse-effect" style="text-align: center;">
+    <img src="https://img.icons8.com/nolan/64/pdf.png"/>
+    <p style="text-shadow: 0 0 5px #00f2fe;">PDFKit Quantum Engine</p>
+  </div>
+  <div class="pulse-effect" style="text-align: center;">
+    <img src="https://img.icons8.com/nolan/64/community.png"/>
+    <p style="text-shadow: 0 0 5px #00f2fe;">Open-Source Quantum Community</p>
+  </div>
+</div>
 
 ---
 
-**[📚 Documentation](docs/index.md)** • **[🐛 Report Anomaly](issues)** • **[✨ Request Quantum Feature](issues)**
-
-<br/>
-
-<div style="background: linear-gradient(45deg, #00f2fe, #4facfe); padding: 10px; border-radius: 5px;">
-
-Made with 🧠 by [Shalom-King](https://github.com/ShalomObongo)
-
+<div style="display: flex; justify-content: center; gap: 20px; margin: 20px 0;">
+  <a href="docs/index.md" class="quantum-card pulse-effect" style="text-decoration: none; padding: 10px 20px;">
+    <img src="https://img.icons8.com/nolan/32/book.png" style="vertical-align: middle;"/>
+    <span style="text-shadow: 0 0 5px #00f2fe;">Documentation</span>
+  </a>
+  <a href="issues" class="quantum-card pulse-effect" style="text-decoration: none; padding: 10px 20px;">
+    <img src="https://img.icons8.com/nolan/32/bug.png" style="vertical-align: middle;"/>
+    <span style="text-shadow: 0 0 5px #00f2fe;">Report Anomaly</span>
+  </a>
+  <a href="issues" class="quantum-card pulse-effect" style="text-decoration: none; padding: 10px 20px;">
+    <img src="https://img.icons8.com/nolan/32/star.png" style="vertical-align: middle;"/>
+    <span style="text-shadow: 0 0 5px #00f2fe;">Request Quantum Feature</span>
+  </a>
 </div>
 
+<div class="quantum-card matrix-bg" style="max-width: 400px; margin: 20px auto;">
+  <div style="background: linear-gradient(45deg, #00f2fe, #4facfe); padding: 10px; border-radius: 5px;">
+    <p class="pulse-effect" style="margin: 0; display: flex; align-items: center; justify-content: center; gap: 10px;">
+      <img src="https://img.icons8.com/nolan/32/brain.png" style="vertical-align: middle;"/>
+      Made with 🧠 by 
+      <a href="https://github.com/ShalomObongo" 
+         style="color: #000; text-decoration: none; font-weight: bold; text-shadow: 0 0 5px #ffffff;">
+        Shalom-King
+      </a>
+    </p>
+  </div>
+</div>
+
+</div>
 </div>
