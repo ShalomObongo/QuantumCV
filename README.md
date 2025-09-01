@@ -202,6 +202,23 @@ Then open your browser to `http://localhost:3000`
    - Synchronized styling
    - Holistic optimization
 
+### 💡 **Quick Start Example**
+```bash
+# Start the application
+npm start
+
+# Choose interface:
+# Option 1: CLI - Traditional command-line experience
+# Option 2: Web - Modern browser interface
+
+# For Web Interface:
+# 1. Open http://localhost:3000 in your browser
+# 2. Select document type (Resume, Cover Letter, or Full Suite)
+# 3. Input your resume data (text or file upload)
+# 4. Add job description (optional for resume, required for cover letter)
+# 5. Click "Generate Document" and download your professional PDF!
+```
+
 ---
 
 <div align="center">
