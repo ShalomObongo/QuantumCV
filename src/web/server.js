@@ -4,6 +4,7 @@ const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 const { generateDocument } = require('../core/documentGenerator');
+const { checkAPIConfiguration } = require('../core/apiConfig');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -17,6 +18,12 @@ app.use(express.static(path.join(__dirname, 'public')));
 const outputDir = path.join(__dirname, '../../Generated cvs');
 if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir, { recursive: true });
+}
+
+// Ensure temp directory exists
+const tempDir = path.join(__dirname, '../../temp');
+if (!fs.existsSync(tempDir)) {
+    fs.mkdirSync(tempDir, { recursive: true });
 }
 
 // Configure multer for file uploads
@@ -43,23 +50,37 @@ const upload = multer({
     }
 });
 
-// Ensure temp directory exists
-const tempDir = path.join(__dirname, '../../temp');
-if (!fs.existsSync(tempDir)) {
-    fs.mkdirSync(tempDir, { recursive: true });
-}
-
 // Routes
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'views/index.html'));
 });
 
-app.get('/api/health', (req, res) => {
-    res.json({ status: 'OK', message: 'QuantumCV API is running' });
+app.get('/api/health', async (req, res) => {
+    const apiStatus = await checkAPIConfiguration();
+    res.json({ 
+        status: 'OK', 
+        message: 'QuantumCV API is running',
+        apiConfigured: apiStatus.configured,
+        apiMessage: apiStatus.message
+    });
+});
+
+app.get('/api/config', async (req, res) => {
+    const apiStatus = await checkAPIConfiguration();
+    res.json(apiStatus);
 });
 
 app.post('/api/generate', upload.single('resumeFile'), async (req, res) => {
     try {
+        // Check API configuration first
+        const apiStatus = await checkAPIConfiguration();
+        if (!apiStatus.configured) {
+            return res.status(500).json({ 
+                error: 'API not configured',
+                message: 'Please configure your Google API key in the .env file'
+            });
+        }
+
         const { resumeText, jobDescription, documentType, tailored } = req.body;
         
         let resumeData = resumeText;
@@ -71,12 +92,12 @@ app.post('/api/generate', upload.single('resumeFile'), async (req, res) => {
             fs.unlinkSync(req.file.path);
         }
         
-        if (!resumeData) {
+        if (!resumeData || resumeData.trim().length === 0) {
             return res.status(400).json({ error: 'Resume text or file is required' });
         }
 
         // Generate document based on type
-        const isTailored = tailored === 'true' && jobDescription;
+        const isTailored = tailored === 'true' && jobDescription && jobDescription.trim().length > 0;
         const result = await generateDocument(
             documentType, 
             resumeData, 
@@ -101,6 +122,15 @@ app.post('/api/generate', upload.single('resumeFile'), async (req, res) => {
 
 app.post('/api/generate-suite', upload.single('resumeFile'), async (req, res) => {
     try {
+        // Check API configuration first
+        const apiStatus = await checkAPIConfiguration();
+        if (!apiStatus.configured) {
+            return res.status(500).json({ 
+                error: 'API not configured',
+                message: 'Please configure your Google API key in the .env file'
+            });
+        }
+
         const { resumeText, jobDescription } = req.body;
         
         let resumeData = resumeText;
@@ -112,11 +142,11 @@ app.post('/api/generate-suite', upload.single('resumeFile'), async (req, res) =>
             fs.unlinkSync(req.file.path);
         }
         
-        if (!resumeData) {
+        if (!resumeData || resumeData.trim().length === 0) {
             return res.status(400).json({ error: 'Resume text or file is required' });
         }
 
-        if (!jobDescription) {
+        if (!jobDescription || jobDescription.trim().length === 0) {
             return res.status(400).json({ error: 'Job description is required for document suite generation' });
         }
 
@@ -201,6 +231,7 @@ app.use((error, req, res, next) => {
 app.listen(PORT, () => {
     console.log(`🚀 QuantumCV Web Server running at http://localhost:${PORT}`);
     console.log(`📊 API Health Check: http://localhost:${PORT}/api/health`);
+    console.log(`🌐 Open your browser to start generating documents!`);
 });
 
 module.exports = app;

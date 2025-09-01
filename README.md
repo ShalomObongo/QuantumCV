@@ -95,7 +95,7 @@ CLI & Web browser modes
 
 ```bash
 # Clone the quantum repository
-git clone https://github.com/yourusername/quantumcv.git
+git clone https://github.com/ShalomObongo/quantumcv.git
 
 # Initialize quantum space
 cd quantumcv
@@ -105,10 +105,21 @@ npm install
 
 # Configure quantum parameters
 cp .env.example .env
+# Edit .env and add your Google API key:
+# GOOGLE_API_KEY=your_gemini_api_key_here
 
-# Launch the quantum core
-node CVandCLbuilder.jsx
+# Choose your interface:
+npm start           # Interactive launcher (CLI or Web)
+npm run web         # Direct web interface
+npm run cli         # Direct CLI interface
 ```
+
+**🔑 API Key Setup:**
+1. Visit [Google AI Studio](https://ai.google.dev/)
+2. Create a new API key for Gemini Pro
+3. Add it to your `.env` file as `GOOGLE_API_KEY=your_key_here`
+4. Restart the application
+
 </div>
 
 ---
@@ -272,10 +283,32 @@ GOOGLE_API_KEY=your_quantum_key_here
 ### 🛸 Core Dependencies
 - @google/generative-ai: Neural core
 - pdfkit: Quantum document engine
+- express: Web server engine
+- multer: File upload handling
+- cors: Cross-origin support
 - chalk & chalk-animation: Holographic UI
 - figlet: ASCII quantum renderer
 - boxen: Terminal quantum fields
 - ora: Quantum spinners
+
+### 🏗️ **NEW!** Architecture
+```
+QuantumCV/
+├── launcher.js              # Interface chooser
+├── CVandCLbuilder.jsx      # Enhanced CLI interface
+├── src/
+│   ├── core/
+│   │   ├── documentGenerator.js  # Core document generation logic
+│   │   └── apiConfig.js         # API configuration management
+│   └── web/
+│       ├── server.js            # Express web server
+│       ├── views/
+│       │   └── index.html       # Modern web interface
+│       └── public/
+│           ├── css/styles.css   # Professional styling
+│           └── js/app.js        # Interactive functionality
+└── Generated cvs/              # Output directory
+```
 
 ---
 

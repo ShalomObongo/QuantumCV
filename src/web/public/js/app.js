@@ -531,10 +531,39 @@ async function checkAPIHealth() {
         const response = await fetch('/api/health');
         const data = await response.json();
         console.log('API Status:', data.message);
+        
+        // Show API configuration status in UI
+        if (!data.apiConfigured) {
+            showAPIConfigurationWarning();
+        }
+        
+        return data;
     } catch (error) {
         console.error('API health check failed:', error);
         showToast('API connection failed. Please check server status.', 'error');
+        return null;
     }
+}
+
+function showAPIConfigurationWarning() {
+    const warningDiv = document.createElement('div');
+    warningDiv.className = 'api-warning';
+    warningDiv.innerHTML = `
+        <div class="warning-content">
+            <h3>⚠️ API Configuration Required</h3>
+            <p>Please configure your Google API key to enable document generation:</p>
+            <ol>
+                <li>Copy <code>.env.example</code> to <code>.env</code></li>
+                <li>Add your Google API key: <code>GOOGLE_API_KEY=your_key_here</code></li>
+                <li>Restart the server</li>
+            </ol>
+            <p><a href="https://ai.google.dev/" target="_blank">Get your API key here</a></p>
+        </div>
+    `;
+    
+    // Insert after header
+    const header = document.querySelector('.header');
+    header.insertAdjacentElement('afterend', warningDiv);
 }
 
 // Check API health on load
