@@ -103,16 +103,38 @@ async function getInputs(needsJobDescription = false) {
         console.log(chalk.cyan('└────────────────────────────────────┘'));
 
         const fileChoice = await askQuestion(chalk.yellow('\nSelect an option: '));
-        resumeText = fileChoice <= textFiles.length ?
-            fs.readFileSync(path.join(__dirname, textFiles[fileChoice - 1]), 'utf8') :
-            await askQuestion(chalk.yellow('Please paste your resume text:\n'));
+        const choice = parseInt(fileChoice);
+        
+        if (choice >= 1 && choice <= textFiles.length) {
+            const filePath = path.join(__dirname, textFiles[choice - 1]);
+            try {
+                resumeText = fs.readFileSync(filePath, 'utf8');
+                console.log(chalk.green(`✅ Loaded resume data from ${textFiles[choice - 1]}`));
+            } catch (error) {
+                console.log(chalk.red(`❌ Error reading file: ${error.message}`));
+                resumeText = await askQuestion(chalk.yellow('Please paste your resume text:\n'));
+            }
+        } else if (choice === textFiles.length + 1) {
+            resumeText = await askQuestion(chalk.yellow('Please paste your resume text:\n'));
+        } else {
+            console.log(chalk.red('❌ Invalid choice. Using manual input.'));
+            resumeText = await askQuestion(chalk.yellow('Please paste your resume text:\n'));
+        }
     } else {
         resumeText = await askQuestion(chalk.yellow('Please paste your resume text:\n'));
+    }
+
+    if (!resumeText || resumeText.trim().length === 0) {
+        throw new Error('Resume text cannot be empty');
     }
 
     const jobDescription = needsJobDescription ? 
         await askQuestion(chalk.yellow('\nPlease paste the job description:\n')) : 
         null;
+    
+    if (needsJobDescription && (!jobDescription || jobDescription.trim().length === 0)) {
+        throw new Error('Job description is required for this operation');
+    }
 
     return { resumeText, jobDescription };
 }
@@ -252,7 +274,7 @@ function buildCoverLetterPrompt(resumeText, jobDescription) {
 
 // Document Generation Functions
 async function generateResume(resumeText, jobDescription = '', isTailored = false) {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     const prompt = buildResumePrompt(resumeText, jobDescription, isTailored);
     
     const result = await model.generateContent(prompt);
@@ -271,7 +293,7 @@ async function generateResume(resumeText, jobDescription = '', isTailored = fals
 }
 
 async function generateCoverLetterContent(resumeText, jobDescription) {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     const prompt = buildCoverLetterPrompt(resumeText, jobDescription);
     
     const result = await model.generateContent(prompt);
@@ -866,54 +888,105 @@ async function main() {
         await displayWelcomeBanner();
         console.log('\n' + chalk.cyan('[ SYSTEM INTERFACE INITIALIZED ]'));
         
-        await displayMenu();
+        let continueRunning = true;
+        
+        while (continueRunning) {
+            await displayMenu();
 
-        const choice = await askQuestion(
-            chalk.cyan('\n[SYSTEM]') + 
-            chalk.white(' Please select operation protocol ') + 
-            chalk.cyan('(1-4): ')
-        );
+            const choice = await askQuestion(
+                chalk.cyan('\n[SYSTEM]') + 
+                chalk.white(' Please select operation protocol ') + 
+                chalk.cyan('(1-4): ')
+            );
 
-        switch(choice) {
-            case '1': {
-                await animateText('\n🌟 INITIALIZING RESUME GENERATION PROTOCOL', 'neon');
-                const { resumeText, jobDescription } = await getInputs(true);
-                const tailorChoice = await askQuestion(
+            switch(choice) {
+                case '1': {
+                    try {
+                        await animateText('\n🌟 INITIALIZING RESUME GENERATION PROTOCOL', 'neon');
+                        const { resumeText } = await getInputs(false);
+                        
+                        const addJobDesc = await askQuestion(
+                            chalk.cyan('\n[SYSTEM] ') + 
+                            chalk.white('Add job description for tailored optimization? (y/n): ')
+                        );
+                        
+                        let jobDescription = null;
+                        if (addJobDesc.toLowerCase() === 'y') {
+                            jobDescription = await askQuestion(chalk.yellow('\nPlease paste the job description:\n'));
+                            if (!jobDescription || jobDescription.trim().length === 0) {
+                                console.log(chalk.yellow('⚠️  No job description provided. Generating general resume.'));
+                                jobDescription = null;
+                            }
+                        }
+                        
+                        spinner.start(chalk.cyan('Quantum processing in progress...'));
+                        const result = await generateDocument('resume', resumeText, jobDescription, outputDir);
+                        spinner.succeed(chalk.green('Document materialization complete! '));
+                        console.log(chalk.yellow(`📄 Saved as: ${result.pdfPath}`));
+                    } catch (error) {
+                        spinner.fail(chalk.red('❌ Resume generation failed'));
+                        console.error(chalk.red(`Error: ${error.message}`));
+                    }
+                    break;
+                }
+                case '2': {
+                    try {
+                        await animateText('\n⚡ INITIALIZING COVER LETTER SYNTHESIS', 'neon');
+                        const inputs = await getInputs(true);
+                        
+                        spinner.start(chalk.cyan('Generating your cover letter...'));
+                        const result = await generateDocument('cover_letter', inputs.resumeText, inputs.jobDescription, outputDir);
+                        spinner.succeed(chalk.green('Cover letter generated successfully!'));
+                        console.log(chalk.yellow(`📝 Saved as: ${result.pdfPath}`));
+                    } catch (error) {
+                        spinner.fail(chalk.red('❌ Cover letter generation failed'));
+                        console.error(chalk.red(`Error: ${error.message}`));
+                    }
+                    break;
+                }
+                case '3': {
+                    try {
+                        await animateText('\n🔮 INITIALIZING FULL SPECTRUM GENERATION', 'neon');
+                        const { resumeText, jobDescription } = await getInputs(true);
+                        
+                        spinner.start(chalk.cyan('Generating your resume...'));
+                        const resumeResult = await generateDocument('resume', resumeText, jobDescription, outputDir);
+                        spinner.succeed(chalk.green('Resume generated successfully!'));
+                        console.log(chalk.yellow(`📄 Resume saved as: ${resumeResult.pdfPath}`));
+                        
+                        spinner.start(chalk.cyan('Generating your cover letter...'));
+                        const coverResult = await generateDocument('cover_letter', resumeText, jobDescription, outputDir);
+                        spinner.succeed(chalk.green('Cover letter generated successfully!'));
+                        console.log(chalk.yellow(`📝 Cover letter saved as: ${coverResult.pdfPath}`));
+                        
+                        console.log(chalk.green.bold('\n✨ All documents have been generated successfully!'));
+                    } catch (error) {
+                        spinner.fail(chalk.red('❌ Document suite generation failed'));
+                        console.error(chalk.red(`Error: ${error.message}`));
+                    }
+                    break;
+                }
+                case '4': {
+                    continueRunning = false;
+                    console.log(chalk.cyan('\n🚀 Initiating system shutdown...'));
+                    break;
+                }
+                default: {
+                    console.log(chalk.red('❌ Invalid choice. Please select 1-4.'));
+                    break;
+                }
+            }
+            
+            if (continueRunning && choice !== '4') {
+                const continueChoice = await askQuestion(
                     chalk.cyan('\n[SYSTEM] ') + 
-                    chalk.white('Enable job-specific optimization? (y/n): ')
+                    chalk.white('Generate another document? (y/n): ')
                 );
-                
-                spinner.start(chalk.cyan('Quantum processing in progress...'));
-                await generateDocument('resume', resumeText, tailorChoice.toLowerCase() === 'y' ? jobDescription : null);
-                spinner.succeed(chalk.green('Document materialization complete! '));
-                break;
+                if (continueChoice.toLowerCase() !== 'y') {
+                    continueRunning = false;
+                    console.log(chalk.cyan('\n🚀 Initiating system shutdown...'));
+                }
             }
-            case '2': {
-                console.log(chalk.cyan.bold('\n✉️  Cover Letter Generation'));
-                const inputs = await getInputs(true);
-                
-                spinner.start('Generating your cover letter...');
-                await generateDocument('cover_letter', inputs.resumeText, inputs.jobDescription);
-                spinner.succeed('Cover letter generated successfully!');
-                break;
-            }
-            case '3': {
-                console.log(chalk.cyan.bold('\n📚 Complete Package Generation'));
-                const { resumeText, jobDescription } = await getInputs(true);
-                
-                spinner.start('Generating your resume...');
-                await generateDocument('resume', resumeText, jobDescription);
-                spinner.succeed('Resume generated successfully!');
-                
-                spinner.start('Generating your cover letter...');
-                await generateDocument('cover_letter', resumeText, jobDescription);
-                spinner.succeed('Cover letter generated successfully!');
-                
-                console.log(chalk.green.bold('\n✨ All documents have been generated successfully!'));
-                break;
-            }
-            default:
-                console.log(chalk.red('❌ Invalid choice. Please try again.'));
         }
     } catch (error) {
         spinner.fail(chalk.red('⚠ SYSTEM ERROR DETECTED'));
