@@ -178,6 +178,7 @@ async function handleFormSubmit(e) {
     
     const formData = new FormData(generationForm);
     const docType = formData.get('documentType');
+    const templateId = formData.get('templateId');
     
     if (!docType) {
         showToast('Please select a document type', 'error');
@@ -197,11 +198,25 @@ async function handleFormSubmit(e) {
         formData.append('resumeFile', uploadedFile);
     }
     
+    // Add custom template if selected
+    if (customTemplate && templateId === 'custom') {
+        formData.append('customTemplate', JSON.stringify(customTemplate));
+    }
+    
     // Show progress
     showProgress();
     
     try {
-        const endpoint = docType === 'suite' ? '/api/generate-suite' : '/api/generate';
+        let endpoint;
+        const useTemplate = templateId && templateId !== '';
+        
+        if (docType === 'suite') {
+            endpoint = '/api/generate-suite';
+        } else if (useTemplate) {
+            endpoint = '/api/generate/template';
+        } else {
+            endpoint = '/api/generate';
+        }
         
         const response = await fetch(endpoint, {
             method: 'POST',
@@ -585,6 +600,376 @@ document.addEventListener('keydown', (e) => {
         resultsSection.style.display = 'none';
     }
 });
+
+// Template Management
+let availableTemplates = {};
+let customTemplate = null;
+
+async function initializeTemplates() {
+    try {
+        const response = await fetch('/api/templates');
+        const data = await response.json();
+        availableTemplates = data.templates;
+        populateTemplateSelect();
+    } catch (error) {
+        console.error('Failed to load templates:', error);
+    }
+}
+
+function populateTemplateSelect() {
+    const templateSelect = document.getElementById('template-select');
+    if (!templateSelect) return;
+    
+    // Clear existing options except default
+    templateSelect.innerHTML = '<option value="">Default Template</option>';
+    
+    // Group templates by category
+    const categories = {};
+    Object.entries(availableTemplates).forEach(([id, template]) => {
+        if (!categories[template.category]) {
+            categories[template.category] = [];
+        }
+        categories[template.category].push({ id, ...template });
+    });
+    
+    // Add options by category
+    Object.entries(categories).forEach(([category, templates]) => {
+        const optgroup = document.createElement('optgroup');
+        optgroup.label = category.charAt(0).toUpperCase() + category.slice(1);
+        
+        templates.forEach(template => {
+            const option = document.createElement('option');
+            option.value = template.id;
+            option.textContent = template.name;
+            option.title = template.description;
+            optgroup.appendChild(option);
+        });
+        
+        templateSelect.appendChild(optgroup);
+    });
+}
+
+// Custom Template Generation
+function initializeCustomTemplates() {
+    const customTemplateBtn = document.getElementById('custom-template-btn');
+    const customTemplateGroup = document.getElementById('custom-template-group');
+    const generateTemplateBtn = document.getElementById('generate-template');
+    const cancelCustomTemplateBtn = document.getElementById('cancel-custom-template');
+    
+    if (customTemplateBtn) {
+        customTemplateBtn.addEventListener('click', () => {
+            customTemplateGroup.style.display = 'block';
+            customTemplateBtn.style.display = 'none';
+        });
+    }
+    
+    if (cancelCustomTemplateBtn) {
+        cancelCustomTemplateBtn.addEventListener('click', () => {
+            customTemplateGroup.style.display = 'none';
+            customTemplateBtn.style.display = 'inline-block';
+            document.getElementById('template-prompt').value = '';
+        });
+    }
+    
+    if (generateTemplateBtn) {
+        generateTemplateBtn.addEventListener('click', generateCustomTemplate);
+    }
+}
+
+async function generateCustomTemplate() {
+    const promptInput = document.getElementById('template-prompt');
+    const generateBtn = document.getElementById('generate-template');
+    const docType = document.getElementById('doc-type').value;
+    
+    if (!promptInput.value.trim()) {
+        showToast('Please describe your ideal template', 'error');
+        return;
+    }
+    
+    try {
+        generateBtn.disabled = true;
+        generateBtn.textContent = 'Generating...';
+        
+        const response = await fetch('/api/templates/custom', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                prompt: promptInput.value.trim(),
+                documentType: docType
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            customTemplate = data.template;
+            showCustomTemplatePreview(customTemplate);
+            showToast('Custom template generated successfully!', 'success');
+            
+            // Hide custom template form
+            document.getElementById('custom-template-group').style.display = 'none';
+            document.getElementById('custom-template-btn').style.display = 'inline-block';
+            promptInput.value = '';
+        } else {
+            throw new Error(data.message || 'Failed to generate template');
+        }
+    } catch (error) {
+        console.error('Template generation error:', error);
+        showToast(error.message || 'Failed to generate custom template', 'error');
+    } finally {
+        generateBtn.disabled = false;
+        generateBtn.textContent = 'Generate Template';
+    }
+}
+
+function showCustomTemplatePreview(template) {
+    const templatePreview = document.getElementById('template-preview');
+    const previewContent = templatePreview.querySelector('.preview-content');
+    
+    previewContent.innerHTML = `
+        <h5 style="color: #60a5fa; margin-top: 0;">${template.name}</h5>
+        <p style="color: #94a3b8; margin-bottom: 20px;">${template.description}</p>
+        <div style="background: #1e293b; padding: 15px; border-radius: 8px; border-left: 3px solid #60a5fa;">
+            <strong>Category:</strong> ${template.category}<br>
+            <strong>Target Audience:</strong> ${template.targetAudience}<br>
+            <strong>Key Features:</strong> ${template.keyFeatures.join(', ')}
+        </div>
+        <div style="margin-top: 15px; font-size: 0.9rem; color: #cbd5e1;">
+            <strong>Template Guidelines:</strong>
+            <div style="background: #0f172a; padding: 15px; border-radius: 8px; margin-top: 8px; max-height: 200px; overflow-y: auto;">
+                ${template.prompt.substring(0, 500)}${template.prompt.length > 500 ? '...' : ''}
+            </div>
+        </div>
+    `;
+    
+    templatePreview.style.display = 'block';
+    
+    // Update template select to show custom template
+    const templateSelect = document.getElementById('template-select');
+    templateSelect.innerHTML = `
+        <option value="">Default Template</option>
+        <option value="custom" selected>✨ ${template.name} (Custom)</option>
+    ` + templateSelect.innerHTML.split('</option>').slice(1).join('</option>');
+    templateSelect.value = 'custom';
+}
+
+// Document Preview
+function initializePreview() {
+    const previewBtn = document.getElementById('preview-btn');
+    const closePreviewBtn = document.getElementById('close-preview');
+    const generateFromPreviewBtn = document.getElementById('generate-from-preview');
+    const editAndPreviewBtn = document.getElementById('edit-and-preview');
+    
+    if (previewBtn) {
+        previewBtn.addEventListener('click', generatePreview);
+    }
+    
+    if (closePreviewBtn) {
+        closePreviewBtn.addEventListener('click', () => {
+            document.getElementById('document-preview').style.display = 'none';
+        });
+    }
+    
+    if (generateFromPreviewBtn) {
+        generateFromPreviewBtn.addEventListener('click', generateFromPreview);
+    }
+    
+    if (editAndPreviewBtn) {
+        editAndPreviewBtn.addEventListener('click', () => {
+            document.getElementById('document-preview').style.display = 'none';
+        });
+    }
+}
+
+async function generatePreview() {
+    const form = document.getElementById('generation-form');
+    const formData = new FormData(form);
+    const docType = formData.get('documentType');
+    const resumeText = formData.get('resumeText');
+    const resumeFile = formData.get('resumeFile');
+    const jobDescription = formData.get('jobDescription');
+    const templateId = formData.get('templateId');
+    
+    if (!docType) {
+        showToast('Please select a document type', 'error');
+        return;
+    }
+    
+    if (!resumeText && !resumeFile) {
+        showToast('Please provide resume data', 'error');
+        return;
+    }
+    
+    try {
+        showPreviewLoading(true);
+        
+        const previewFormData = new FormData();
+        previewFormData.append('documentType', docType);
+        previewFormData.append('resumeText', resumeText);
+        previewFormData.append('jobDescription', jobDescription || '');
+        previewFormData.append('templateId', templateId || '');
+        
+        if (customTemplate && templateId === 'custom') {
+            previewFormData.append('customTemplate', JSON.stringify(customTemplate));
+        }
+        
+        if (resumeFile && resumeFile.size > 0) {
+            previewFormData.append('resumeFile', resumeFile);
+        }
+        
+        const response = await fetch('/api/generate/preview', {
+            method: 'POST',
+            body: previewFormData
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showDocumentPreview(data.preview, data.documentType);
+        } else {
+            throw new Error(data.message || 'Failed to generate preview');
+        }
+    } catch (error) {
+        console.error('Preview generation error:', error);
+        showToast(error.message || 'Failed to generate preview', 'error');
+    } finally {
+        showPreviewLoading(false);
+    }
+}
+
+function showPreviewLoading(show) {
+    const loading = document.getElementById('preview-loading');
+    const btn = document.getElementById('preview-btn');
+    
+    if (show) {
+        loading.style.display = 'flex';
+        btn.style.display = 'none';
+    } else {
+        loading.style.display = 'none';
+        btn.style.display = 'inline-block';
+    }
+}
+
+function showDocumentPreview(preview, docType) {
+    const previewContainer = document.getElementById('document-preview');
+    const previewContent = document.getElementById('preview-content');
+    
+    previewContent.innerHTML = `
+        <div style="margin-bottom: 15px;">
+            <span style="background: #1e293b; padding: 4px 12px; border-radius: 12px; font-size: 0.85rem; color: #60a5fa; border: 1px solid #334155;">
+                ${docType === 'cover_letter' ? 'Cover Letter' : 'Resume'} Preview
+            </span>
+        </div>
+        <div style="white-space: pre-wrap; line-height: 1.7;">
+            ${preview}
+        </div>
+    `;
+    
+    previewContainer.style.display = 'block';
+    previewContainer.scrollIntoView({ behavior: 'smooth' });
+}
+
+async function generateFromPreview() {
+    const form = document.getElementById('generation-form');
+    const generateBtn = document.getElementById('generate-from-preview');
+    const originalText = generateBtn.textContent;
+    
+    try {
+        generateBtn.disabled = true;
+        generateBtn.textContent = 'Generating...';
+        
+        await submitForm(form, true); // Use template-aware submission
+        
+        // Close preview after successful generation
+        document.getElementById('document-preview').style.display = 'none';
+    } catch (error) {
+        console.error('Generation from preview error:', error);
+    } finally {
+        generateBtn.disabled = false;
+        generateBtn.textContent = originalText;
+    }
+}
+
+// Update form submission to handle templates
+async function submitForm(form, useTemplate = false) {
+    const formData = new FormData(form);
+    const docType = formData.get('documentType');
+    const templateId = formData.get('templateId');
+    
+    // Choose endpoint based on whether we're using templates
+    const endpoint = useTemplate ? '/api/generate/template' : '/api/generate';
+    
+    if (customTemplate && templateId === 'custom') {
+        formData.append('customTemplate', JSON.stringify(customTemplate));
+    }
+    
+    const response = await fetch(endpoint, {
+        method: 'POST',
+        body: formData
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+        throw new Error(data.message || `HTTP error! status: ${response.status}`);
+    }
+    
+    return data;
+}
+
+// Initialize new features
+document.addEventListener('DOMContentLoaded', () => {
+    initializeTemplates();
+    initializeCustomTemplates();
+    initializePreview();
+    initializePreviewCloseButtons();
+    
+    // Handle template selection changes
+    const templateSelect = document.getElementById('template-select');
+    if (templateSelect) {
+        templateSelect.addEventListener('change', (e) => {
+            const selectedTemplate = availableTemplates[e.target.value];
+            if (selectedTemplate) {
+                showTemplateInfo(selectedTemplate);
+            } else {
+                hideTemplateInfo();
+            }
+        });
+    }
+    
+    // Update document type change handler to reload templates
+    const docTypeSelect = document.getElementById('doc-type');
+    if (docTypeSelect) {
+        docTypeSelect.addEventListener('change', () => {
+            initializeTemplates();
+            customTemplate = null;
+            hideTemplateInfo();
+        });
+    }
+});
+
+function showTemplateInfo(template) {
+    // You can add a tooltip or info display here if needed
+    console.log('Selected template:', template.name);
+}
+
+function hideTemplateInfo() {
+    const templatePreview = document.getElementById('template-preview');
+    if (templatePreview) {
+        templatePreview.style.display = 'none';
+    }
+}
+
+// Add close preview event handlers
+function initializePreviewCloseButtons() {
+    // Template preview close button
+    const templatePreviewCloseBtn = document.querySelector('#template-preview .close-preview');
+    if (templatePreviewCloseBtn) {
+        templatePreviewCloseBtn.addEventListener('click', () => {
+            document.getElementById('template-preview').style.display = 'none';
+        });
+    }
+}
 
 // Real-time character count for textareas
 function addCharacterCounters() {

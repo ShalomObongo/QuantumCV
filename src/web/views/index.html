@@ -78,8 +78,8 @@
                                 <div class="file-upload-area" id="file-upload">
                                     <div class="upload-icon">📄</div>
                                     <p>Drop your resume file here or click to browse</p>
-                                    <p class="file-hint">Accepts .txt files only</p>
-                                    <input type="file" id="resume-file" name="resumeFile" accept=".txt" hidden>
+                                    <p class="file-hint">Accepts .txt and .pdf files</p>
+                                    <input type="file" id="resume-file" name="resumeFile" accept=".txt,.pdf" hidden>
                                 </div>
                                 <div class="file-info" id="file-info" style="display: none;">
                                     <span class="file-name"></span>
@@ -97,6 +97,64 @@
                                 placeholder="Paste the job description here for tailored generation..."
                                 rows="6"
                             ></textarea>
+                        </div>
+
+                        <!-- Template Selection -->
+                        <div class="form-group" id="template-group">
+                            <label for="template-select">Template Style</label>
+                            <div class="template-selector">
+                                <select id="template-select" name="templateId">
+                                    <option value="">Default Template</option>
+                                </select>
+                                <button type="button" class="btn-secondary" id="custom-template-btn">✨ Generate Custom Template</button>
+                            </div>
+                            
+                            <!-- Template Preview -->
+                            <div class="template-preview" id="template-preview" style="display: none;">
+                                <div class="preview-header">
+                                    <h4>Template Preview</h4>
+                                    <button type="button" class="close-preview">✕</button>
+                                </div>
+                                <div class="preview-content"></div>
+                            </div>
+                        </div>
+
+                        <!-- Custom Template Generator -->
+                        <div class="form-group" id="custom-template-group" style="display: none;">
+                            <label for="template-prompt">Describe Your Ideal Template</label>
+                            <textarea 
+                                id="template-prompt" 
+                                name="templatePrompt" 
+                                placeholder="Describe the type of template you want... (e.g., 'A creative template for graphic design roles with emphasis on portfolio projects')"
+                                rows="4"
+                            ></textarea>
+                            <div class="template-actions">
+                                <button type="button" class="btn-primary" id="generate-template">Generate Template</button>
+                                <button type="button" class="btn-secondary" id="cancel-custom-template">Cancel</button>
+                            </div>
+                        </div>
+
+                        <!-- Document Preview -->
+                        <div class="form-group" id="preview-group">
+                            <div class="preview-controls">
+                                <button type="button" class="btn-secondary" id="preview-btn">👁️ Preview Document</button>
+                                <div class="preview-loading" id="preview-loading" style="display: none;">
+                                    <div class="loading-spinner"></div>
+                                    Generating preview...
+                                </div>
+                            </div>
+                            
+                            <div class="document-preview" id="document-preview" style="display: none;">
+                                <div class="preview-header">
+                                    <h4>Document Preview</h4>
+                                    <button type="button" class="close-preview" id="close-preview">✕</button>
+                                </div>
+                                <div class="preview-content" id="preview-content"></div>
+                                <div class="preview-actions">
+                                    <button type="button" class="btn-primary" id="generate-from-preview">Generate Final Document</button>
+                                    <button type="button" class="btn-secondary" id="edit-and-preview">Edit & Preview Again</button>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Options -->
