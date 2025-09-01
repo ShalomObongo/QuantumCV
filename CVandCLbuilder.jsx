@@ -274,7 +274,7 @@ function buildCoverLetterPrompt(resumeText, jobDescription) {
 
 // Document Generation Functions
 async function generateResume(resumeText, jobDescription = '', isTailored = false) {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     const prompt = buildResumePrompt(resumeText, jobDescription, isTailored);
     
     const result = await model.generateContent(prompt);
@@ -293,7 +293,7 @@ async function generateResume(resumeText, jobDescription = '', isTailored = fals
 }
 
 async function generateCoverLetterContent(resumeText, jobDescription) {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     const prompt = buildCoverLetterPrompt(resumeText, jobDescription);
     
     const result = await model.generateContent(prompt);
