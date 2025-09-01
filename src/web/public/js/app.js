@@ -592,18 +592,18 @@ function addCharacterCounters() {
     textareas.forEach(textarea => {
         const counter = document.createElement('div');
         counter.className = 'char-counter';
-        counter.style.cssText = 'text-align: right; font-size: 0.8rem; color: #6c757d; margin-top: 5px;';
+        counter.style.cssText = 'text-align: right; font-size: 0.85rem; color: #64748b; margin-top: 8px; font-weight: 500;';
         textarea.parentNode.appendChild(counter);
         
         function updateCounter() {
             const length = textarea.value.length;
             counter.textContent = `${length} characters`;
             if (length > 5000) {
-                counter.style.color = '#dc3545';
+                counter.style.color = '#f87171';
             } else if (length > 3000) {
-                counter.style.color = '#ffc107';
+                counter.style.color = '#fbbf24';
             } else {
-                counter.style.color = '#6c757d';
+                counter.style.color = '#64748b';
             }
         }
         

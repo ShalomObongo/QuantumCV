@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 // API Configuration Check
 async function checkAPIConfiguration() {
     if (!process.env.GOOGLE_API_KEY) {
