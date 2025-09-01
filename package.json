@@ -4,10 +4,13 @@
     "boxen": "^5.1.2",
     "chalk": "^4.1.2",
     "chalk-animation": "^1.6.0",
+    "cors": "^2.8.5",
     "dotenv": "^16.4.5",
+    "express": "^4.19.2",
     "figlet": "^1.5.2",
     "fs": "^0.0.1-security",
     "gradient-string": "^2.0.2",
+    "multer": "^2.0.2",
     "ora": "^5.4.1",
     "path": "^0.12.7",
     "pdfkit": "^0.15.0",
@@ -17,10 +20,12 @@
   "name": "quantumcv",
   "version": "1.0.0",
   "description": "Next-Gen Document Generator 3000 - Creating tomorrow's documents, today. An AI-powered resume and cover letter generator using Google's Gemini Pro.",
-  "main": "CVandCLbuilder.jsx",
+  "main": "launcher.js",
   "scripts": {
-    "start": "node CVandCLbuilder.jsx",
-    "generate": "node CVandCLbuilder.jsx"
+    "start": "node launcher.js",
+    "cli": "node CVandCLbuilder.jsx",
+    "web": "node src/web/server.js",
+    "dev": "node src/web/server.js"
   },
   "keywords": [
     "resume-generator",

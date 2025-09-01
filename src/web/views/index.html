@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuantumCV | Next-Gen Document Generator</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <span class="quantum-text">QUANTUM</span>
+                <span class="cv-text">CV</span>
+            </div>
+            <p class="tagline">Next-Gen Document Generator 3000</p>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Navigation Tabs -->
+            <div class="tabs">
+                <button class="tab-button active" data-tab="generator">
+                    <span class="icon">🌟</span>
+                    Generator
+                </button>
+                <button class="tab-button" data-tab="files">
+                    <span class="icon">📁</span>
+                    Files
+                </button>
+                <button class="tab-button" data-tab="about">
+                    <span class="icon">ℹ️</span>
+                    About
+                </button>
+            </div>
+
+            <!-- Generator Tab -->
+            <div class="tab-content active" id="generator">
+                <div class="generator-section">
+                    <h2>Document Generation</h2>
+                    <p class="section-description">Create professional resumes and cover letters powered by AI</p>
+                    
+                    <form id="generation-form" class="generation-form">
+                        <!-- Document Type Selection -->
+                        <div class="form-group">
+                            <label for="doc-type">Document Type</label>
+                            <select id="doc-type" name="documentType" required>
+                                <option value="">Select document type</option>
+                                <option value="resume">🌟 Quantum Resume/CV</option>
+                                <option value="cover_letter">⚡ Neural Cover Letter</option>
+                                <option value="suite">🔮 Full Document Suite</option>
+                            </select>
+                        </div>
+
+                        <!-- Resume Input -->
+                        <div class="form-group">
+                            <label for="resume-input">Resume Data</label>
+                            <div class="input-tabs">
+                                <button type="button" class="input-tab active" data-input="text">Text Input</button>
+                                <button type="button" class="input-tab" data-input="file">File Upload</button>
+                            </div>
+                            
+                            <div class="input-content active" id="text-input">
+                                <textarea 
+                                    id="resume-text" 
+                                    name="resumeText" 
+                                    placeholder="Paste your resume text here..."
+                                    rows="8"
+                                ></textarea>
+                            </div>
+                            
+                            <div class="input-content" id="file-input">
+                                <div class="file-upload-area" id="file-upload">
+                                    <div class="upload-icon">📄</div>
+                                    <p>Drop your resume file here or click to browse</p>
+                                    <p class="file-hint">Accepts .txt files only</p>
+                                    <input type="file" id="resume-file" name="resumeFile" accept=".txt" hidden>
+                                </div>
+                                <div class="file-info" id="file-info" style="display: none;">
+                                    <span class="file-name"></span>
+                                    <button type="button" class="remove-file">✕</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Job Description -->
+                        <div class="form-group" id="job-description-group">
+                            <label for="job-description">Job Description</label>
+                            <textarea 
+                                id="job-description" 
+                                name="jobDescription" 
+                                placeholder="Paste the job description here for tailored generation..."
+                                rows="6"
+                            ></textarea>
+                        </div>
+
+                        <!-- Options -->
+                        <div class="form-group options-group" id="resume-options" style="display: none;">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="tailored" name="tailored" value="true">
+                                <span class="checkmark"></span>
+                                Enable job-specific optimization
+                            </label>
+                        </div>
+
+                        <!-- Generate Button -->
+                        <button type="submit" class="generate-btn" id="generate-btn">
+                            <span class="btn-text">Generate Document</span>
+                            <span class="btn-icon">🚀</span>
+                        </button>
+                    </form>
+
+                    <!-- Progress Section -->
+                    <div class="progress-section" id="progress-section" style="display: none;">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progress-fill"></div>
+                        </div>
+                        <p class="progress-text" id="progress-text">Initializing quantum processing...</p>
+                    </div>
+
+                    <!-- Results Section -->
+                    <div class="results-section" id="results-section" style="display: none;">
+                        <h3>Generation Complete!</h3>
+                        <div class="result-files" id="result-files"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Files Tab -->
+            <div class="tab-content" id="files">
+                <div class="files-section">
+                    <h2>Generated Documents</h2>
+                    <p class="section-description">Download and manage your generated documents</p>
+                    
+                    <div class="files-list" id="files-list">
+                        <!-- Files will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- About Tab -->
+            <div class="tab-content" id="about">
+                <div class="about-section">
+                    <h2>About QuantumCV</h2>
+                    <p class="section-description">Next-generation document generation powered by AI</p>
+                    
+                    <div class="feature-grid">
+                        <div class="feature-card">
+                            <div class="feature-icon">🤖</div>
+                            <h3>AI-Powered</h3>
+                            <p>Leverages Google Gemini Pro for intelligent content generation</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">🎯</div>
+                            <h3>Job-Tailored</h3>
+                            <p>Optimizes content for specific job descriptions</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">📄</div>
+                            <h3>Professional PDFs</h3>
+                            <p>Generates polished, ATS-friendly documents</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">⚡</div>
+                            <h3>Fast Generation</h3>
+                            <p>Quick turnaround for all your document needs</p>
+                        </div>
+                    </div>
+
+                    <div class="version-info">
+                        <p><strong>Version:</strong> 2.0.0</p>
+                        <p><strong>CLI Mode:</strong> Run <code>npm start</code> for command-line interface</p>
+                        <p><strong>Web Mode:</strong> Run <code>npm run web</code> for browser interface</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2024 QuantumCV | Created by <a href="https://github.com/ShalomObongo" target="_blank">Shalom-King</a></p>
+        </footer>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast" id="toast"></div>
+
+    <script src="/js/app.js"></script>
+</body>
+</html>

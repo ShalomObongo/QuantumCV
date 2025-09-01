@@ -79,9 +79,9 @@ AI-powered optimization
 <td align="center">
 <img src="https://img.icons8.com/nolan/64/launched-rocket.png" width="48px"/>
 <br/>
-<b>CLI Interface</b>
+<b>Dual Interface</b>
 <br/>
-Holographic command center
+CLI & Web browser modes
 </td>
 </tr>
 </table></div>
@@ -157,10 +157,23 @@ Resume Data
 
 </div>
 
-### 🌟 Launch Sequence
+### 🌟 CLI Launch Sequence
 ```bash
+# Traditional command-line interface
 node CVandCLbuilder.jsx
+# or
+npm start
 ```
+
+### 🌐 **NEW!** Web Interface Launch
+```bash
+# Modern browser-based interface
+npm run web
+# or
+npm run dev
+```
+
+Then open your browser to `http://localhost:3000`
 
 ### 🎯 Operation Protocols
 1. 🌠 **Quantum Resume Generation**
@@ -177,6 +190,31 @@ node CVandCLbuilder.jsx
    - Complete document suite
    - Synchronized styling
    - Holistic optimization
+
+---
+
+<div align="center">
+
+## 🌐 **NEW!** Web Interface Features
+
+</div>
+
+### ✨ Modern Browser Experience
+- **Intuitive UI**: Clean, modern interface with tabbed navigation
+- **File Upload**: Drag-and-drop resume file upload
+- **Real-time Progress**: Live progress tracking with visual indicators
+- **Instant Download**: Direct PDF download from browser
+- **File Management**: View and download all generated documents
+- **Auto-save**: Form data automatically saved locally
+- **Responsive Design**: Works perfectly on desktop and mobile
+
+### 🚀 Enhanced Functionality
+- **Dual Input Mode**: Text input or file upload
+- **Smart Validation**: Real-time form validation and feedback
+- **Character Counters**: Live character count for all text areas
+- **Keyboard Shortcuts**: Ctrl/Cmd + Enter to generate
+- **Toast Notifications**: Elegant success/error messages
+- **API Health Check**: Automatic backend connectivity verification
 
 ---
 
@@ -252,6 +290,42 @@ GOOGLE_API_KEY=your_quantum_key_here
 3. 💫 Commit your changes (`git commit -m 'Add QuantumFeature'`)
 4. 🌠 Push to the branch (`git push origin feature/QuantumFeature`)
 5. 🎯 Open a Quantum Pull Request
+
+---
+
+<div align="center">
+
+## 🔮 Upcoming Quantum Features
+
+</div>
+
+### 🌟 **Coming Soon**
+- **📊 Analytics Dashboard**: Track document performance and ATS scores
+- **🎨 Custom Templates**: Multiple professional resume templates
+- **🔍 Document Preview**: Real-time PDF preview before download
+- **☁️ Cloud Storage**: Save documents to Google Drive/Dropbox
+- **📱 Mobile App**: Native iOS and Android applications
+- **🤝 Team Collaboration**: Share and collaborate on documents
+- **📈 ATS Scoring**: Real-time ATS compatibility analysis
+- **🌍 Multi-language**: Support for multiple languages
+- **🔄 Version History**: Track and revert document changes
+- **📧 Email Integration**: Direct email sending capabilities
+
+### 🚀 **Enhanced AI Features**
+- **🧠 Smart Suggestions**: AI-powered content recommendations
+- **🎯 Industry-Specific**: Specialized prompts for different industries
+- **📝 Auto-formatting**: Intelligent section organization
+- **🔗 LinkedIn Integration**: Import profile data automatically
+- **📊 Skills Assessment**: AI-powered skill gap analysis
+- **🎪 Interview Prep**: Generate interview questions based on resume
+
+### ⚡ **Performance & UX**
+- **🚄 Faster Generation**: Optimized AI processing pipeline
+- **🎮 Interactive Tutorial**: Guided onboarding experience
+- **🔔 Real-time Notifications**: Desktop and mobile notifications
+- **📱 Progressive Web App**: Offline functionality
+- **🎨 Dark Mode**: Professional dark theme option
+- **🔧 Advanced Settings**: Granular control over generation parameters
 
 ---
 
