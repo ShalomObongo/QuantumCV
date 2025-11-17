@@ -142,6 +142,71 @@ export default function ReviewPage() {
     }
   };
 
+  // Batch selection functions
+  const selectAll = () => {
+    if (!reviewResult) return;
+    const allIds = reviewResult.aiReview.suggestions.map((s: ReviewSuggestion) => s.id);
+    setAcceptedSuggestions(new Set(allIds));
+  };
+
+  const selectNone = () => {
+    setAcceptedSuggestions(new Set());
+  };
+
+  const selectByPriority = (priority: string) => {
+    if (!reviewResult) return;
+    const filtered = reviewResult.aiReview.suggestions
+      .filter((s: ReviewSuggestion) => s.priority === priority)
+      .map((s: ReviewSuggestion) => s.id);
+    setAcceptedSuggestions(new Set(filtered));
+  };
+
+  // Export suggestions as checklist
+  const exportAsChecklist = () => {
+    if (!reviewResult) return;
+
+    const suggestions = reviewResult.aiReview.suggestions;
+    let markdown = `# Resume Improvement Checklist\n\n`;
+    markdown += `Generated on ${new Date().toLocaleDateString()}\n\n`;
+    markdown += `## Overall Assessment\n${reviewResult.aiReview.overallAssessment}\n\n`;
+    markdown += `## Current ATS Score: ${reviewResult.atsScore.overall}/100\n`;
+    markdown += `## Potential Score: ${reviewResult.aiReview.scoreImpact.potentialScore}/100\n\n`;
+
+    // Group by category
+    const byCategory: Record<string, ReviewSuggestion[]> = {};
+    suggestions.forEach((s: ReviewSuggestion) => {
+      if (!byCategory[s.category]) {
+        byCategory[s.category] = [];
+      }
+      byCategory[s.category].push(s);
+    });
+
+    Object.keys(byCategory).forEach((category) => {
+      markdown += `## ${category.toUpperCase()}\n\n`;
+      byCategory[category].forEach((s: ReviewSuggestion) => {
+        markdown += `### [ ] ${s.section}: ${s.issue}\n`;
+        markdown += `**Priority:** ${s.priority}\n\n`;
+        markdown += `**Action:** ${s.suggestion}\n\n`;
+        if (s.example) {
+          markdown += `**Example:** ${s.example}\n\n`;
+        }
+        markdown += `**Why it matters:** ${s.reasoning}\n\n`;
+        markdown += `---\n\n`;
+      });
+    });
+
+    // Create and download file
+    const blob = new Blob([markdown], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `resume-improvements-${Date.now()}.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-8 max-w-6xl mx-auto">
       <div>
@@ -313,7 +378,32 @@ export default function ReviewPage() {
                 Review and select suggestions to apply. Click on any suggestion to accept/reject it.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-4">
+              {/* Batch Actions */}
+              <div className="flex flex-wrap gap-2 pb-4 border-b">
+                <Button variant="outline" size="sm" onClick={selectAll}>
+                  Select All
+                </Button>
+                <Button variant="outline" size="sm" onClick={selectNone}>
+                  Select None
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => selectByPriority('critical')}>
+                  Critical Only
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => selectByPriority('high')}>
+                  High Priority
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => selectByPriority('medium')}>
+                  Medium Priority
+                </Button>
+                <Button variant="outline" size="sm" onClick={exportAsChecklist}>
+                  <Download className="mr-2 h-4 w-4" />
+                  Export Checklist
+                </Button>
+              </div>
+
+              {/* Suggestions List */}
+              <div className="space-y-3">
               {reviewResult.aiReview.suggestions.map((suggestion: ReviewSuggestion) => {
                 const isAccepted = acceptedSuggestions.has(suggestion.id);
                 return (
@@ -352,6 +442,7 @@ export default function ReviewPage() {
                   </div>
                 );
               })}
+              </div>
             </CardContent>
           </Card>
 

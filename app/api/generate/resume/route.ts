@@ -3,7 +3,8 @@ import { getAIProvider, cleanAIResponse } from '@/lib/ai/provider';
 import { buildResumePrompt } from '@/lib/gemini/prompts';
 import { generateResumePDF } from '@/lib/pdf/resume-generator';
 import { generateTemplatedResumePDF } from '@/lib/pdf/template-renderer';
-import { createDocument } from '@/lib/firebase/db-utils';
+import { renderCustomTemplate } from '@/lib/pdf/custom-template-renderer';
+import { createDocument, getUserCustomTemplates, CustomTemplate } from '@/lib/firebase/db-utils';
 import { calculateATSScore } from '@/lib/ats/scoring';
 import { ResumeData, TemplateId } from '@/types';
 
@@ -42,8 +43,31 @@ export async function POST(request: NextRequest) {
     // Calculate ATS score
     const atsScore = calculateATSScore(resumeData, jobDescription);
 
-    // Generate PDF using selected template
-    const pdfBuffer = await generateTemplatedResumePDF(resumeData, selectedTemplate);
+    // Generate PDF using selected template (built-in or custom)
+    let pdfBuffer: Buffer;
+    let isCustomTemplate = false;
+
+    if (selectedTemplate.startsWith('custom-')) {
+      // Custom template - fetch and render
+      isCustomTemplate = true;
+      const customTemplateId = selectedTemplate.replace('custom-', '');
+
+      // Fetch user's custom templates
+      const customTemplates = await getUserCustomTemplates(userId);
+      const customTemplate = customTemplates.find((t) => t.id === customTemplateId);
+
+      if (!customTemplate) {
+        return NextResponse.json(
+          { error: 'Custom template not found' },
+          { status: 404 }
+        );
+      }
+
+      pdfBuffer = await renderCustomTemplate(resumeData, customTemplate);
+    } else {
+      // Built-in template
+      pdfBuffer = await generateTemplatedResumePDF(resumeData, selectedTemplate);
+    }
 
     // Create document record in Firestore
     const variant = isTailored ? 'tailored' : 'general';
