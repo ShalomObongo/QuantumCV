@@ -20,16 +20,24 @@ export const formatFileSize = (bytes: number): string => {
   return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
 };
 
-export const formatRelativeTime = (date: Date): string => {
+export const formatRelativeTime = (date: Date | string): string => {
+  // Convert string to Date if needed (for JSON serialized dates)
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+
+  // Validate date
+  if (isNaN(dateObj.getTime())) {
+    return 'Invalid date';
+  }
+
   const now = new Date();
-  const diffInMs = now.getTime() - date.getTime();
+  const diffInMs = now.getTime() - dateObj.getTime();
   const diffInSecs = Math.floor(diffInMs / 1000);
   const diffInMins = Math.floor(diffInSecs / 60);
   const diffInHours = Math.floor(diffInMins / 60);
   const diffInDays = Math.floor(diffInHours / 24);
 
   if (diffInDays > 30) {
-    return date.toLocaleDateString();
+    return dateObj.toLocaleDateString();
   } else if (diffInDays > 0) {
     return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
   } else if (diffInHours > 0) {

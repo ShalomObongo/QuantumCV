@@ -81,6 +81,24 @@ export const saveResumeData = async (
   }
 };
 
+export const getUserResumeData = async (uid: string): Promise<ResumeData | null> => {
+  if (!db) throw new Error('Firebase Firestore not initialized');
+
+  try {
+    const docRef = db.collection('users').doc(uid);
+    const docSnap = await docRef.get();
+
+    if (docSnap.exists) {
+      const data = docSnap.data();
+      return data?.resumeData || null;
+    }
+    return null;
+  } catch (error) {
+    console.error('Error getting resume data:', error);
+    throw error;
+  }
+};
+
 // Document Operations
 export const createDocument = async (
   documentData: Omit<Document, 'id' | 'createdAt'>
@@ -178,6 +196,73 @@ export const updateDocument = async (
     await docRef.update(updates);
   } catch (error) {
     console.error('Error updating document:', error);
+    throw error;
+  }
+};
+
+// Custom Template Operations
+export interface CustomTemplate {
+  id?: string;
+  userId: string;
+  name: string;
+  type: 'html' | 'pdf';
+  content: string; // HTML string or PDF base64
+  thumbnail?: string; // base64 image
+  createdAt: Date;
+}
+
+export const createCustomTemplate = async (
+  templateData: Omit<CustomTemplate, 'id' | 'createdAt'>
+): Promise<string> => {
+  if (!db) throw new Error('Firebase Firestore not initialized');
+
+  try {
+    const docRef = db.collection('customTemplates').doc();
+    await docRef.set({
+      ...templateData,
+      createdAt: FieldValue.serverTimestamp(),
+    });
+    return docRef.id;
+  } catch (error) {
+    console.error('Error creating custom template:', error);
+    throw error;
+  }
+};
+
+export const getUserCustomTemplates = async (userId: string): Promise<CustomTemplate[]> => {
+  if (!db) throw new Error('Firebase Firestore not initialized');
+
+  try {
+    const querySnapshot = await db
+      .collection('customTemplates')
+      .where('userId', '==', userId)
+      .orderBy('createdAt', 'desc')
+      .get();
+
+    const templates: CustomTemplate[] = [];
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      templates.push({
+        id: doc.id,
+        ...data,
+        createdAt: data.createdAt?.toDate() || new Date(),
+      } as CustomTemplate);
+    });
+
+    return templates;
+  } catch (error) {
+    console.error('Error getting custom templates:', error);
+    throw error;
+  }
+};
+
+export const deleteCustomTemplate = async (templateId: string): Promise<void> => {
+  if (!db) throw new Error('Firebase Firestore not initialized');
+
+  try {
+    await db.collection('customTemplates').doc(templateId).delete();
+  } catch (error) {
+    console.error('Error deleting custom template:', error);
     throw error;
   }
 };
