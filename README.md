@@ -4,13 +4,19 @@
 
 <h1>
   <img src="https://img.icons8.com/nolan/64/artificial-intelligence.png" width="32px" align="top" />
-  QuantumCV | Next-Gen Document Generator 3000
+  QuantumCV | AI-Powered Resume & Cover Letter Generator
   <img src="https://img.icons8.com/nolan/64/artificial-intelligence.png" width="32px" align="top" />
 </h1>
 
 <div>
   <a href="https://nodejs.org">
-    <img src="https://img.shields.io/badge/node-%3E%3D%2014.0.0-brightgreen?style=for-the-badge&logo=node.js&logoColor=white&labelColor=000000"/>
+    <img src="https://img.shields.io/badge/node-%3E%3D%2018.0.0-brightgreen?style=for-the-badge&logo=node.js&logoColor=white&labelColor=000000"/>
+  </a>
+  <a href="https://nextjs.org">
+    <img src="https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=next.js&logoColor=white&labelColor=000000"/>
+  </a>
+  <a href="https://firebase.google.com">
+    <img src="https://img.shields.io/badge/Firebase-Auth%20%2B%20Firestore-orange?style=for-the-badge&logo=firebase&logoColor=white&labelColor=000000"/>
   </a>
   <a href="https://ai.google.dev/">
     <img src="https://img.shields.io/badge/powered%20by-Gemini%20Pro-blue?style=for-the-badge&logo=google&logoColor=white&labelColor=000000"/>
@@ -18,23 +24,18 @@
   <a href="LICENSE">
     <img src="https://img.shields.io/badge/License-ISC-purple?style=for-the-badge&labelColor=000000"/>
   </a>
-  <a href="https://github.com/ShalomObongo/quantumcv/graphs/commit-activity">
-    <img src="https://img.shields.io/badge/Maintained%3F-yes-green.svg?style=for-the-badge&labelColor=000000"/>
-  </a>
 </div>
 
 <br />
 
-> 🚀 Creating Tomorrow's Documents, Today
-
-<img width="800" src="https://raw.githubusercontent.com/yourusername/quantumcv/main/assets/demo.gif"/>
+> 🚀 Professional web application for creating AI-powered resumes and cover letters
 
 </div>
 
 ---
 
 <div align="center">
-<h2>🌟 Quantum Features Matrix</h2>
+<h2>🌟 Key Features</h2>
 </div>
 
 <table align="center">
@@ -42,112 +43,131 @@
 <td align="center" width="33%">
 <img src="https://img.icons8.com/nolan/64/artificial-intelligence.png" width="48px"/>
 <br/>
-<b>Neural Document Generation</b>
+<b>AI-Powered Generation</b>
 <br/>
-Harness Gemini Pro's quantum AI
+Google Gemini Pro integration
 </td>
 <td align="center" width="33%">
-<img src="https://img.icons8.com/nolan/64/code.png" width="48px"/>
+<img src="https://img.icons8.com/nolan/64/user.png" width="48px"/>
 <br/>
-<b>Adaptive Formatting</b>
+<b>User Authentication</b>
 <br/>
-Self-optimizing layouts
+Firebase Auth with Google OAuth
 </td>
 <td align="center" width="33%">
 <img src="https://img.icons8.com/nolan/64/blockchain-technology.png" width="48px"/>
 <br/>
-<b>Job-Specific Optimization</b>
+<b>Job-Tailored Documents</b>
 <br/>
-Real-time content adaptation
+Content optimization for roles
 </td>
 </tr>
 <tr>
 <td align="center">
 <img src="https://img.icons8.com/nolan/64/design.png" width="48px"/>
 <br/>
-<b>Quantum Styling</b>
+<b>Professional Design</b>
 <br/>
-Next-gen visual aesthetics
+Clean, modern aesthetics
 </td>
 <td align="center">
-<img src="https://img.icons8.com/nolan/64/cyber-security.png" width="48px"/>
+<img src="https://img.icons8.com/nolan/64/moon-symbol.png" width="48px"/>
 <br/>
-<b>ATS Enhancement</b>
+<b>Light/Dark Theme</b>
 <br/>
-AI-powered optimization
+Persistent theme preferences
 </td>
 <td align="center">
-<img src="https://img.icons8.com/nolan/64/launched-rocket.png" width="48px"/>
+<img src="https://img.icons8.com/nolan/64/database.png" width="48px"/>
 <br/>
-<b>CLI Interface</b>
+<b>Document History</b>
 <br/>
-Holographic command center
+Firestore-backed storage
 </td>
 </tr>
 </table></div>
 
 ---
 
-<div class="quantum-card matrix-bg">
-<div align="center">
-<h2 class="pulse-effect">🚀 Quantum Installation Protocol</h2>
-</div>
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js 18.0.0 or higher
+- npm or yarn package manager
+- Google Gemini Pro API key
+- Firebase project (with Auth and Firestore enabled)
+
+### Installation
 
 ```bash
-# Clone the quantum repository
-git clone https://github.com/yourusername/quantumcv.git
+# Clone the repository
+git clone https://github.com/ShalomObongo/quantumcv.git
 
-# Initialize quantum space
+# Navigate to project directory
 cd quantumcv
 
-# Synchronize dependencies
+# Install dependencies
 npm install
 
-# Configure quantum parameters
+# Copy environment variables
 cp .env.example .env
-
-# Launch the quantum core
-node CVandCLbuilder.jsx
 ```
-</div>
+
+### Configuration
+
+Edit `.env` and add your credentials:
+
+```env
+# Google Gemini AI
+GOOGLE_API_KEY=your_gemini_api_key_here
+
+# Firebase Configuration
+NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+
+# Firebase Admin (for server-side)
+FIREBASE_ADMIN_PROJECT_ID=your_project_id
+FIREBASE_ADMIN_CLIENT_EMAIL=your_service_account_email
+FIREBASE_ADMIN_PRIVATE_KEY=your_private_key
+```
+
+### Running the Application
+
+```bash
+# Development mode
+npm run dev
+
+# Production build
+npm run build
+npm start
+
+# Run tests
+npm test                # Unit tests
+npm run test:e2e       # E2E tests
+
+# Type checking
+npm run type-check
+```
+
+Visit `http://localhost:3000` to access the application.
 
 ---
 
-<div class="quantum-card">
-<div align="center">
-<h2 class="pulse-effect">🌌 System Requirements</h2>
-</div>
+## 🏗️ Tech Stack
 
-<table align="center">
-<tr>
-<td>
-<div class="rotating-icon">
-<img src="https://img.icons8.com/nolan/32/nodejs.png"/>
-</div>
-Node.js
-</td>
-<td>v14.0.0+</td>
-</tr>
-<tr>
-<td>
-<div class="rotating-icon">
-<img src="https://img.icons8.com/nolan/32/google-cloud.png"/>
-</div>
-Gemini Pro API
-</td>
-<td>Active Key</td>
-</tr>
-<tr>
-<td>
-<div class="rotating-icon">
-<img src="https://img.icons8.com/nolan/32/document.png"/>
-</div>
-Resume Data
-</td>
-<td>Text Format</td>
-</tr>
-</table>
-</div>
+- **Framework**: Next.js 14 (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **Authentication**: Firebase Auth
+- **Database**: Firebase Firestore
+- **AI**: Google Gemini Pro
+- **PDF Generation**: PDFKit
+- **Testing**: Jest + Playwright
+- **Deployment**: Vercel
 
 ---
 
