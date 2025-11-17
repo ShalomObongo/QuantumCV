@@ -13,7 +13,7 @@ import { FileText, FilePlus, History } from 'lucide-react';
 import { formatRelativeTime } from '@/lib/utils/helpers';
 
 export default function DashboardPage() {
-  const [user] = useAuthState(auth);
+  const [user] = useAuthState(auth!);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
 

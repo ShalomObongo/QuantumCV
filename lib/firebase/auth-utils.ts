@@ -19,6 +19,8 @@ export const registerWithEmail = async (
   password: string,
   displayName: string
 ): Promise<User> => {
+  if (!auth) throw new Error('Firebase Auth not initialized');
+
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
@@ -40,6 +42,8 @@ export const signInWithEmail = async (
   email: string,
   password: string
 ): Promise<User> => {
+  if (!auth) throw new Error('Firebase Auth not initialized');
+
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     return userCredential.user;
@@ -50,6 +54,8 @@ export const signInWithEmail = async (
 };
 
 export const signInWithGoogle = async (): Promise<User> => {
+  if (!auth || !db) throw new Error('Firebase not initialized');
+
   try {
     const userCredential = await signInWithPopup(auth, googleProvider);
     const user = userCredential.user;
@@ -72,6 +78,8 @@ export const signInWithGoogle = async (): Promise<User> => {
 };
 
 export const signOut = async (): Promise<void> => {
+  if (!auth) throw new Error('Firebase Auth not initialized');
+
   try {
     await firebaseSignOut(auth);
   } catch (error: any) {
@@ -81,6 +89,8 @@ export const signOut = async (): Promise<void> => {
 };
 
 export const resetPassword = async (email: string): Promise<void> => {
+  if (!auth) throw new Error('Firebase Auth not initialized');
+
   try {
     await sendPasswordResetEmail(auth, email);
   } catch (error: any) {
@@ -94,6 +104,8 @@ const createUserProfile = async (
   email: string,
   displayName: string
 ): Promise<void> => {
+  if (!db) throw new Error('Firebase Firestore not initialized');
+
   try {
     const userProfile: Partial<UserProfile> = {
       uid,
@@ -118,5 +130,5 @@ const createUserProfile = async (
 };
 
 export const getCurrentUser = (): User | null => {
-  return auth.currentUser;
+  return auth?.currentUser || null;
 };

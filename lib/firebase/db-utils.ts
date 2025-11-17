@@ -18,6 +18,8 @@ import { UserProfile, Document, ResumeData } from '@/types';
 
 // User Profile Operations
 export const getUserProfile = async (uid: string): Promise<UserProfile | null> => {
+  if (!db) throw new Error('Firebase Firestore not initialized');
+
   try {
     const docRef = doc(db, 'users', uid);
     const docSnap = await getDoc(docRef);
@@ -41,6 +43,8 @@ export const updateUserProfile = async (
   uid: string,
   updates: Partial<UserProfile>
 ): Promise<void> => {
+  if (!db) throw new Error('Firebase Firestore not initialized');
+
   try {
     const docRef = doc(db, 'users', uid);
     await updateDoc(docRef, {
@@ -57,6 +61,8 @@ export const updateUserTheme = async (
   uid: string,
   theme: 'light' | 'dark'
 ): Promise<void> => {
+  if (!db) throw new Error('Firebase Firestore not initialized');
+
   try {
     const docRef = doc(db, 'users', uid);
     await updateDoc(docRef, {
@@ -73,6 +79,8 @@ export const saveResumeData = async (
   uid: string,
   resumeData: ResumeData
 ): Promise<void> => {
+  if (!db) throw new Error('Firebase Firestore not initialized');
+
   try {
     const docRef = doc(db, 'users', uid);
     await updateDoc(docRef, {
@@ -89,6 +97,8 @@ export const saveResumeData = async (
 export const createDocument = async (
   documentData: Omit<Document, 'id' | 'createdAt'>
 ): Promise<string> => {
+  if (!db) throw new Error('Firebase Firestore not initialized');
+
   try {
     const docRef = doc(collection(db, 'documents'));
     await setDoc(docRef, {
@@ -103,6 +113,8 @@ export const createDocument = async (
 };
 
 export const getDocument = async (documentId: string): Promise<Document | null> => {
+  if (!db) throw new Error('Firebase Firestore not initialized');
+
   try {
     const docRef = doc(db, 'documents', documentId);
     const docSnap = await getDoc(docRef);
@@ -126,6 +138,8 @@ export const getUserDocuments = async (
   userId: string,
   limitCount: number = 50
 ): Promise<Document[]> => {
+  if (!db) throw new Error('Firebase Firestore not initialized');
+
   try {
     const q = query(
       collection(db, 'documents'),
@@ -154,6 +168,8 @@ export const getUserDocuments = async (
 };
 
 export const deleteDocument = async (documentId: string): Promise<void> => {
+  if (!db) throw new Error('Firebase Firestore not initialized');
+
   try {
     await deleteDoc(doc(db, 'documents', documentId));
   } catch (error) {
@@ -166,6 +182,8 @@ export const updateDocument = async (
   documentId: string,
   updates: Partial<Document>
 ): Promise<void> => {
+  if (!db) throw new Error('Firebase Firestore not initialized');
+
   try {
     const docRef = doc(db, 'documents', documentId);
     await updateDoc(docRef, updates);

@@ -12,7 +12,7 @@ import { FileText, Trash2, History } from 'lucide-react';
 import { formatRelativeTime } from '@/lib/utils/helpers';
 
 export default function HistoryPage() {
-  const [user] = useAuthState(auth);
+  const [user] = useAuthState(auth!);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null);

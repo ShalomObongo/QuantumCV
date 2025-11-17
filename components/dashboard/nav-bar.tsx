@@ -11,7 +11,7 @@ import { auth } from '@/lib/firebase/config';
 
 export function NavBar() {
   const router = useRouter();
-  const [user] = useAuthState(auth);
+  const [user] = useAuthState(auth!);
 
   const handleSignOut = async () => {
     try {

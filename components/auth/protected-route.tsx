@@ -7,8 +7,17 @@ import { auth } from '@/lib/firebase/config';
 import { Loading } from '@/components/ui/loading-spinner';
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const [user, loading] = useAuthState(auth);
   const router = useRouter();
+
+  // Handle case where auth is not initialized
+  if (!auth) {
+    useEffect(() => {
+      router.push('/login');
+    }, [router]);
+    return <Loading text="Initializing..." />;
+  }
+
+  const [user, loading] = useAuthState(auth);
 
   useEffect(() => {
     if (!loading && !user) {

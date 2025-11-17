@@ -17,7 +17,7 @@ type DocumentType = 'resume' | 'cover_letter';
 
 export default function GeneratePage() {
   const searchParams = useSearchParams();
-  const [user] = useAuthState(auth);
+  const [user] = useAuthState(auth!);
   const [docType, setDocType] = useState<DocumentType>(
     (searchParams?.get('type') as DocumentType) || 'resume'
   );
