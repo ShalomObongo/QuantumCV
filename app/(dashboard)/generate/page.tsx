@@ -10,8 +10,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { TemplateSelector } from '@/components/templates/template-selector';
+import { ATSScoreDisplay } from '@/components/ats/ats-score-display';
 import { FileText, FilePlus, Download, Check } from 'lucide-react';
 import { downloadBlob } from '@/lib/utils/helpers';
+import { TemplateId, ATSScore } from '@/types';
 
 type DocumentType = 'resume' | 'cover_letter';
 
@@ -21,6 +24,7 @@ export default function GeneratePage() {
   const [docType, setDocType] = useState<DocumentType>(
     (searchParams?.get('type') as DocumentType) || 'resume'
   );
+  const [selectedTemplate, setSelectedTemplate] = useState<TemplateId>('modern');
   const [resumeText, setResumeText] = useState('');
   const [jobDescription, setJobDescription] = useState('');
   const [isTailored, setIsTailored] = useState(true);
@@ -28,6 +32,7 @@ export default function GeneratePage() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [generatedFileName, setGeneratedFileName] = useState<string | null>(null);
+  const [atsScore, setAtsScore] = useState<ATSScore | null>(null);
 
   const handleGenerate = async () => {
     if (!user) return;
@@ -35,6 +40,7 @@ export default function GeneratePage() {
     setLoading(true);
     setError(null);
     setSuccess(false);
+    setAtsScore(null);
 
     try {
       const endpoint =
@@ -48,6 +54,7 @@ export default function GeneratePage() {
           resumeText,
           jobDescription: docType === 'cover_letter' ? jobDescription : isTailored ? jobDescription : null,
           isTailored: docType === 'resume' ? isTailored : true,
+          templateId: docType === 'resume' ? selectedTemplate : undefined,
         }),
       });
 
@@ -65,6 +72,9 @@ export default function GeneratePage() {
       downloadBlob(pdfBlob, data.fileName);
 
       setGeneratedFileName(data.fileName);
+      if (data.atsScore && docType === 'resume') {
+        setAtsScore(data.atsScore);
+      }
       setSuccess(true);
     } catch (err: any) {
       setError(err.message || 'Failed to generate document');
@@ -117,6 +127,18 @@ export default function GeneratePage() {
           </CardHeader>
         </Card>
       </div>
+
+      {/* Template Selector (only for resumes) */}
+      {docType === 'resume' && (
+        <Card>
+          <CardContent className="pt-6">
+            <TemplateSelector
+              selectedTemplate={selectedTemplate}
+              onSelectTemplate={setSelectedTemplate}
+            />
+          </CardContent>
+        </Card>
+      )}
 
       {/* Generation Form */}
       <Card>
@@ -215,6 +237,13 @@ export default function GeneratePage() {
           </Button>
         </CardContent>
       </Card>
+
+      {/* ATS Score Display (only for resumes) */}
+      {atsScore && docType === 'resume' && (
+        <div className="mt-6">
+          <ATSScoreDisplay score={atsScore} showDetails={true} />
+        </div>
+      )}
     </div>
   );
 }

@@ -1,10 +1,10 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { Button } from '@/components/ui/button';
 
 describe('Button Component', () => {
   it('renders button with text', () => {
-    render(<Button>Click me</Button>);
-    expect(screen.getByText('Click me')).toBeInTheDocument();
+    const { getByText } = render(<Button>Click me</Button>);
+    expect(getByText('Click me')).toBeInTheDocument();
   });
 
   it('applies variant classes correctly', () => {
@@ -14,8 +14,8 @@ describe('Button Component', () => {
   });
 
   it('handles disabled state', () => {
-    render(<Button disabled>Disabled</Button>);
-    const button = screen.getByText('Disabled');
+    const { getByText } = render(<Button disabled>Disabled</Button>);
+    const button = getByText('Disabled');
     expect(button).toBeDisabled();
   });
 });

@@ -2,13 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getGeminiModel, cleanAIResponse } from '@/lib/gemini/client';
 import { buildResumePrompt } from '@/lib/gemini/prompts';
 import { generateResumePDF } from '@/lib/pdf/resume-generator';
+import { generateTemplatedResumePDF } from '@/lib/pdf/template-renderer';
 import { createDocument } from '@/lib/firebase/db-utils';
-import { ResumeData } from '@/types';
+import { calculateATSScore } from '@/lib/ats/scoring';
+import { ResumeData, TemplateId } from '@/types';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { resumeText, jobDescription, isTailored, userId } = body;
+    const { resumeText, jobDescription, isTailored, userId, templateId } = body;
 
     if (!resumeText || !userId) {
       return NextResponse.json(
@@ -16,6 +18,9 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Use templateId if provided, otherwise default to 'modern'
+    const selectedTemplate: TemplateId = templateId || 'modern';
 
     // Generate resume data using AI
     const model = getGeminiModel();
@@ -34,8 +39,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate PDF
-    const pdfBuffer = await generateResumePDF(resumeData);
+    // Calculate ATS score
+    const atsScore = calculateATSScore(resumeData, jobDescription);
+
+    // Generate PDF using selected template
+    const pdfBuffer = await generateTemplatedResumePDF(resumeData, selectedTemplate);
 
     // Create document record in Firestore
     const variant = isTailored ? 'tailored' : 'general';
@@ -48,6 +56,8 @@ export async function POST(request: NextRequest) {
       data: resumeData,
       fileName,
       jobDescription: jobDescription || undefined,
+      templateId: selectedTemplate,
+      atsScore,
     });
 
     // Return PDF as base64 for download
@@ -59,6 +69,7 @@ export async function POST(request: NextRequest) {
       resumeData,
       pdf: pdfBase64,
       fileName,
+      atsScore,
     });
   } catch (error: any) {
     console.error('Resume generation error:', error);

@@ -89,12 +89,103 @@ export interface Document {
   createdAt: Date;
   jobDescription?: string;
   fileName: string;
+  templateId?: string;
+  atsScore?: ATSScore;
+  versionNumber?: number;
+  parentVersionId?: string;
+  versionName?: string;
+}
+
+// Resume Templates
+export type TemplateId = 'modern' | 'classic' | 'professional' | 'creative' | 'minimal';
+
+export interface ResumeTemplate {
+  id: TemplateId;
+  name: string;
+  description: string;
+  preview: string;
+  category: 'modern' | 'traditional' | 'creative';
+  colors: {
+    primary: string;
+    secondary: string;
+    accent: string;
+  };
+  layout: 'single-column' | 'two-column' | 'timeline';
+}
+
+// ATS Scoring
+export interface ATSScore {
+  overall: number; // 0-100
+  breakdown: {
+    keywords: number;
+    formatting: number;
+    structure: number;
+    skills: number;
+    experience: number;
+  };
+  issues: ATSIssue[];
+  recommendations: string[];
+  matchedKeywords: string[];
+  missingKeywords: string[];
+  lastAnalyzed: Date;
+}
+
+export interface ATSIssue {
+  severity: 'critical' | 'warning' | 'info';
+  category: 'formatting' | 'content' | 'keywords' | 'structure';
+  message: string;
+  suggestion: string;
+}
+
+// Version Control
+export interface ResumeVersion {
+  id: string;
+  documentId: string;
+  versionNumber: number;
+  versionName: string;
+  data: ResumeData;
+  createdAt: Date;
+  jobDescription?: string;
+  atsScore?: ATSScore;
+  changes?: string;
+}
+
+// Resume Parser
+export interface ParseResumeRequest {
+  file: File;
+  userId: string;
+}
+
+export interface ParseResumeResponse {
+  success: boolean;
+  resumeData?: ResumeData;
+  confidence: number;
+  warnings?: string[];
+  error?: string;
+}
+
+// Real-time AI Suggestions
+export interface ContentSuggestion {
+  id: string;
+  type: 'improvement' | 'addition' | 'keyword' | 'rephrasing';
+  field: string;
+  originalText: string;
+  suggestedText: string;
+  reason: string;
+  impact: 'high' | 'medium' | 'low';
+}
+
+export interface SuggestionRequest {
+  content: string;
+  context: 'summary' | 'experience' | 'skills' | 'achievement';
+  jobDescription?: string;
 }
 
 export interface GenerateResumeRequest {
   resumeText: string;
   jobDescription?: string;
   isTailored: boolean;
+  templateId?: TemplateId;
 }
 
 export interface GenerateCoverLetterRequest {
