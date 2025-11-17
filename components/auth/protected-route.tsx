@@ -9,26 +9,22 @@ import { Loading } from '@/components/ui/loading-spinner';
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
-  // Handle case where auth is not initialized
-  if (!auth) {
-    useEffect(() => {
-      router.push('/login');
-    }, [router]);
-    return <Loading text="Initializing..." />;
-  }
-
-  const [user, loading] = useAuthState(auth);
+  // Always call hooks at the top level
+  const [user, loading, error] = auth ? useAuthState(auth) : [null, false, null];
 
   useEffect(() => {
-    if (!loading && !user) {
+    // Redirect if auth is not initialized or user is not logged in
+    if (!auth || (!loading && !user)) {
       router.push('/login');
     }
-  }, [user, loading, router]);
+  }, [auth, user, loading, router]);
 
-  if (loading) {
-    return <Loading text="Authenticating..." />;
+  // Show loading state
+  if (!auth || loading) {
+    return <Loading text={!auth ? "Initializing..." : "Authenticating..."} />;
   }
 
+  // Wait for auth check to complete
   if (!user) {
     return null;
   }
