@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '@/lib/firebase/config';
-import { getUserDocuments } from '@/lib/firebase/db-utils';
+import { getUserDocuments, deleteDocument } from '@/lib/firebase/client-api';
 import { Document } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -39,14 +39,7 @@ export default function HistoryPage() {
 
     setDeleteLoading(documentId);
     try {
-      const response = await fetch(`/api/documents?documentId=${documentId}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete document');
-      }
-
+      await deleteDocument(documentId);
       // Refresh documents
       await fetchDocuments();
     } catch (error) {

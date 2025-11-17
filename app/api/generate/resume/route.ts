@@ -49,16 +49,22 @@ export async function POST(request: NextRequest) {
     const variant = isTailored ? 'tailored' : 'general';
     const fileName = `resume_${variant}_${Date.now()}.pdf`;
 
-    const documentId = await createDocument({
+    const documentData: any = {
       userId,
       type: 'resume',
       variant,
       data: resumeData,
       fileName,
-      jobDescription: jobDescription || undefined,
       templateId: selectedTemplate,
       atsScore,
-    });
+    };
+
+    // Only include jobDescription if it exists (Firestore doesn't allow undefined)
+    if (jobDescription) {
+      documentData.jobDescription = jobDescription;
+    }
+
+    const documentId = await createDocument(documentData);
 
     // Return PDF as base64 for download
     const pdfBase64 = pdfBuffer.toString('base64');

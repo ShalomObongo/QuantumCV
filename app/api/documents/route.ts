@@ -31,7 +31,9 @@ export async function GET(request: NextRequest) {
     }
 
     // Get user documents
-    const documents = await getUserDocuments(userId);
+    const limitParam = searchParams.get('limit');
+    const limit = limitParam ? parseInt(limitParam) : undefined;
+    const documents = await getUserDocuments(userId, limit);
     return NextResponse.json({ documents });
   } catch (error: any) {
     console.error('Error fetching documents:', error);
