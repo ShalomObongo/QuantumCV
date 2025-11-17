@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getGeminiModel, cleanAIResponse } from '@/lib/gemini/client';
+import { getAIProvider, cleanAIResponse } from '@/lib/ai/provider';
 import { buildResumePrompt } from '@/lib/gemini/prompts';
 import { generateResumePDF } from '@/lib/pdf/resume-generator';
 import { generateTemplatedResumePDF } from '@/lib/pdf/template-renderer';
@@ -22,11 +22,11 @@ export async function POST(request: NextRequest) {
     // Use templateId if provided, otherwise default to 'modern'
     const selectedTemplate: TemplateId = templateId || 'modern';
 
-    // Generate resume data using AI
-    const model = getGeminiModel();
+    // Generate resume data using AI (with automatic fallback)
+    const aiProvider = getAIProvider();
     const prompt = buildResumePrompt(resumeText, jobDescription, isTailored);
-    const result = await model.generateContent(prompt);
-    const cleanedResponse = cleanAIResponse(result.response.text());
+    const result = await aiProvider.generateContent(prompt);
+    const cleanedResponse = cleanAIResponse(result.text);
 
     let resumeData: ResumeData;
     try {

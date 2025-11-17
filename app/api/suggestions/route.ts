@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getGeminiModel, cleanAIResponse } from '@/lib/gemini/client';
+import { getAIProvider, cleanAIResponse } from '@/lib/ai/provider';
 import { ContentSuggestion } from '@/types';
 
 export async function POST(request: NextRequest) {
@@ -24,10 +24,10 @@ export async function POST(request: NextRequest) {
     // Build suggestion prompt based on content type
     const prompt = buildSuggestionPrompt(content, contentType, jobDescription);
 
-    // Use Gemini AI to generate suggestions
-    const model = getGeminiModel();
-    const result = await model.generateContent(prompt);
-    const cleanedResponse = cleanAIResponse(result.response.text());
+    // Use AI to generate suggestions (with automatic fallback)
+    const aiProvider = getAIProvider();
+    const result = await aiProvider.generateContent(prompt);
+    const cleanedResponse = cleanAIResponse(result.text);
 
     let suggestions: ContentSuggestion[];
     try {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getGeminiModel } from '@/lib/gemini/client';
+import { getAIProvider } from '@/lib/ai/provider';
 import { buildCoverLetterPrompt } from '@/lib/gemini/prompts';
 import {
   generateCoverLetterPDF,
@@ -19,11 +19,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate cover letter content using AI
-    const model = getGeminiModel();
+    // Generate cover letter content using AI (with automatic fallback)
+    const aiProvider = getAIProvider();
     const prompt = buildCoverLetterPrompt(resumeText, jobDescription);
-    const result = await model.generateContent(prompt);
-    const rawContent = result.response.text();
+    const result = await aiProvider.generateContent(prompt);
+    const rawContent = result.text;
     const cleanedContent = cleanCoverLetterContent(rawContent);
 
     // Generate PDF

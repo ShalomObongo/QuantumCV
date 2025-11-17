@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getGeminiModel, cleanAIResponse } from '@/lib/gemini/client';
+import { getAIProvider, cleanAIResponse } from '@/lib/ai/provider';
 import { ResumeData } from '@/types';
 
 export async function POST(request: NextRequest) {
@@ -17,10 +17,10 @@ export async function POST(request: NextRequest) {
     // Build parsing prompt
     const prompt = buildParsingPrompt(resumeText);
 
-    // Use Gemini AI to parse the resume
-    const model = getGeminiModel();
-    const result = await model.generateContent(prompt);
-    const cleanedResponse = cleanAIResponse(result.response.text());
+    // Use AI to parse the resume (with automatic fallback)
+    const aiProvider = getAIProvider();
+    const result = await aiProvider.generateContent(prompt);
+    const cleanedResponse = cleanAIResponse(result.text);
 
     let parsedData: ResumeData;
     try {
