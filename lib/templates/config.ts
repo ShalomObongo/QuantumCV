@@ -1,6 +1,6 @@
-import { ResumeTemplate, TemplateId } from '@/types';
+import { ResumeTemplate, BuiltInTemplateId } from '@/types';
 
-export const RESUME_TEMPLATES: Record<TemplateId, ResumeTemplate> = {
+export const RESUME_TEMPLATES: Record<BuiltInTemplateId, ResumeTemplate> = {
   modern: {
     id: 'modern',
     name: 'Modern Professional',
@@ -68,7 +68,7 @@ export const RESUME_TEMPLATES: Record<TemplateId, ResumeTemplate> = {
   },
 };
 
-export const getTemplate = (templateId?: TemplateId): ResumeTemplate => {
+export const getTemplate = (templateId?: BuiltInTemplateId): ResumeTemplate => {
   return RESUME_TEMPLATES[templateId || 'modern'];
 };
 

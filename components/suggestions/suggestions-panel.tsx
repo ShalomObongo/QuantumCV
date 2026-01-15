@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useAuthState } from 'react-firebase-hooks/auth';
 import { ContentSuggestion } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,6 +15,8 @@ import {
   ChevronRight,
   Sparkles,
 } from 'lucide-react';
+import { auth } from '@/lib/firebase/config';
+import { getAuthHeaders } from '@/lib/firebase/client-token';
 
 interface SuggestionsPanelProps {
   content: string;
@@ -28,6 +31,7 @@ export function SuggestionsPanel({
   jobDescription,
   onApplySuggestion,
 }: SuggestionsPanelProps) {
+  const [user] = useAuthState(auth!);
   const [suggestions, setSuggestions] = useState<ContentSuggestion[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,6 +41,12 @@ export function SuggestionsPanel({
   const fetchSuggestions = useCallback(async () => {
     if (!content || content.trim().length < 20) {
       setSuggestions([]);
+      return;
+    }
+
+    if (!user) {
+      setSuggestions([]);
+      setError('Sign in to get AI suggestions');
       return;
     }
 
@@ -51,7 +61,10 @@ export function SuggestionsPanel({
 
       const response = await fetch('/api/suggestions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(await getAuthHeaders(user)),
+        },
         body: JSON.stringify({
           content,
           contentType,
@@ -73,7 +86,7 @@ export function SuggestionsPanel({
     } finally {
       setLoading(false);
     }
-  }, [content, contentType, jobDescription, lastFetchedContent]);
+  }, [content, contentType, jobDescription, lastFetchedContent, user]);
 
   // Auto-fetch on content change (debounced)
   useEffect(() => {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter } from 'next/navigation';
 import { auth } from '@/lib/firebase/config';
@@ -8,7 +8,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Loading } from '@/components/ui/loading-spinner';
 import { Save, Plus, Trash2, ArrowLeft } from 'lucide-react';
-import { ResumeData } from '@/types';
+import { ContentSuggestion, ResumeData } from '@/types';
+import { getAuthHeaders } from '@/lib/firebase/client-token';
+import { ResumeUploader } from '@/components/upload/resume-uploader';
+import { SuggestionsPanel } from '@/components/suggestions/suggestions-panel';
 
 export default function EditResumePage() {
   const [user] = useAuthState(auth!);
@@ -16,13 +19,17 @@ export default function EditResumePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [resumeData, setResumeData] = useState<ResumeData | null>(null);
+  const [autosaveStatus, setAutosaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [autosaveError, setAutosaveError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchResumeData = async () => {
       if (!user) return;
 
       try {
-        const response = await fetch(`/api/resume-data?userId=${user.uid}`);
+        const response = await fetch(`/api/resume-data`, {
+          headers: await getAuthHeaders(user),
+        });
         if (response.ok) {
           const data = await response.json();
           setResumeData(data.resumeData || getEmptyResumeData());
@@ -60,9 +67,11 @@ export default function EditResumePage() {
     try {
       const response = await fetch('/api/resume-data', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(await getAuthHeaders(user)),
+        },
         body: JSON.stringify({
-          userId: user.uid,
           resumeData,
         }),
       });
@@ -78,6 +87,75 @@ export default function EditResumePage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const shouldAutosave = useMemo(() => {
+    if (!user) return false;
+    if (!resumeData) return false;
+    if (loading) return false;
+    return true;
+  }, [user, resumeData, loading]);
+
+  useEffect(() => {
+    if (!shouldAutosave) return;
+    if (saving) return;
+
+    setAutosaveStatus('idle');
+    setAutosaveError(null);
+
+    const timer = setTimeout(async () => {
+      try {
+        setAutosaveStatus('saving');
+        const response = await fetch('/api/resume-data', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(await getAuthHeaders(user!)),
+          },
+          body: JSON.stringify({ resumeData }),
+        });
+
+        if (!response.ok) {
+          const data = await response.json().catch(() => null);
+          throw new Error(data?.error || 'Autosave failed');
+        }
+
+        setAutosaveStatus('saved');
+      } catch (err: any) {
+        setAutosaveStatus('error');
+        setAutosaveError(err.message || 'Autosave failed');
+      }
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [shouldAutosave, saving, resumeData, user]);
+
+  const handleApplySummarySuggestion = (suggestion: ContentSuggestion) => {
+    if (!resumeData) return;
+    setResumeData({ ...resumeData, summary: suggestion.suggestedText });
+  };
+
+  const handleApplySkillsSuggestion = (suggestion: ContentSuggestion) => {
+    if (!resumeData) return;
+
+    const raw = suggestion.suggestedText;
+    const tokens = raw
+      .split(/[,;|\n]+/)
+      .map((t) => t.trim())
+      .filter(Boolean);
+
+    if (tokens.length === 0) return;
+
+    const current = resumeData.skills?.technical || [];
+    const merged = Array.from(new Set([...current, ...tokens]));
+
+    setResumeData({
+      ...resumeData,
+      skills: {
+        ...resumeData.skills!,
+        technical: merged,
+      },
+    });
   };
 
   const addExperience = () => {
@@ -163,12 +241,25 @@ export default function EditResumePage() {
           <p className="text-muted-foreground mt-2">
             Manage your resume information. This data will be reused when generating new resumes.
           </p>
+          {autosaveStatus !== 'idle' && (
+            <p className="text-sm mt-2 text-muted-foreground">
+              {autosaveStatus === 'saving'
+                ? 'Autosaving…'
+                : autosaveStatus === 'saved'
+                  ? 'All changes saved'
+                  : `Autosave error: ${autosaveError || 'Unknown error'}`}
+            </p>
+          )}
         </div>
         <Button variant="outline" onClick={() => router.back()}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back
         </Button>
       </div>
+
+      <ResumeUploader
+        onDataExtracted={(data) => setResumeData(data)}
+      />
 
       {/* Contact Information */}
       <Card>
@@ -242,12 +333,18 @@ export default function EditResumePage() {
         <CardHeader>
           <CardTitle>Professional Summary</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           <textarea
             value={resumeData.summary || ''}
             onChange={(e) => setResumeData({ ...resumeData, summary: e.target.value })}
             placeholder="Write a brief professional summary..."
             className="w-full min-h-[100px] p-3 border rounded-md"
+          />
+
+          <SuggestionsPanel
+            content={resumeData.summary || ''}
+            contentType="summary"
+            onApplySuggestion={handleApplySummarySuggestion}
           />
         </CardContent>
       </Card>
@@ -318,7 +415,7 @@ export default function EditResumePage() {
           ))}
           {(!resumeData.experience || resumeData.experience.length === 0) && (
             <p className="text-center text-muted-foreground py-8">
-              No work experience added yet. Click "Add Experience" to get started.
+              No work experience added yet. Click Add Experience to get started.
             </p>
           )}
         </CardContent>
@@ -382,7 +479,7 @@ export default function EditResumePage() {
           ))}
           {(!resumeData.education || resumeData.education.length === 0) && (
             <p className="text-center text-muted-foreground py-8">
-              No education added yet. Click "Add Education" to get started.
+              No education added yet. Click Add Education to get started.
             </p>
           )}
         </CardContent>
@@ -434,6 +531,15 @@ export default function EditResumePage() {
               className="w-full p-2 border rounded-md"
             />
           </div>
+
+          <SuggestionsPanel
+            content={[
+              ...(resumeData.skills?.technical || []),
+              ...(resumeData.skills?.soft || []),
+            ].join(', ')}
+            contentType="skills"
+            onApplySuggestion={handleApplySkillsSuggestion}
+          />
         </CardContent>
       </Card>
 

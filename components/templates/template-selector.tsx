@@ -1,9 +1,14 @@
 'use client';
 
-import { TemplateId } from '@/types';
-import { getTemplate, getAllTemplates } from '@/lib/templates/config';
+import { useEffect, useState } from 'react';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { CustomTemplateMeta, TemplateId } from '@/types';
+import { getAllTemplates } from '@/lib/templates/config';
 import { Card } from '@/components/ui/card';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { CheckCircle } from 'lucide-react';
+import { auth } from '@/lib/firebase/config';
+import { getAuthHeaders } from '@/lib/firebase/client-token';
 
 interface TemplateSelectorProps {
   selectedTemplate: TemplateId;
@@ -15,6 +20,36 @@ export function TemplateSelector({
   onSelectTemplate,
 }: TemplateSelectorProps) {
   const templates = getAllTemplates();
+  const [user] = useAuthState(auth!);
+  const [customTemplates, setCustomTemplates] = useState<CustomTemplateMeta[]>([]);
+  const [customLoading, setCustomLoading] = useState(false);
+  const [customError, setCustomError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadCustomTemplates = async () => {
+      if (!user) return;
+
+      try {
+        setCustomLoading(true);
+        setCustomError(null);
+        const response = await fetch('/api/custom-templates', {
+          headers: await getAuthHeaders(user),
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to load custom templates');
+        }
+        setCustomTemplates(data.templates || []);
+      } catch (err: any) {
+        setCustomError(err.message || 'Failed to load custom templates');
+        setCustomTemplates([]);
+      } finally {
+        setCustomLoading(false);
+      }
+    };
+
+    loadCustomTemplates();
+  }, [user]);
 
   return (
     <div className="space-y-4">
@@ -160,6 +195,58 @@ export function TemplateSelector({
             </Card>
           );
         })}
+      </div>
+
+      <div className="pt-2">
+        <div className="flex items-center justify-between">
+          <h4 className="text-sm font-semibold">Custom Templates</h4>
+          {customLoading && <LoadingSpinner size="sm" />}
+        </div>
+        {customError && (
+          <p className="text-xs text-destructive mt-1">{customError}</p>
+        )}
+
+        {customTemplates.length === 0 ? (
+          <p className="text-sm text-muted-foreground mt-2">
+            No custom templates yet. Upload one in the Templates page.
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-3">
+            {customTemplates.map((template) => {
+              const templateId = `custom-${template.id}` as TemplateId;
+              const isSelected = selectedTemplate === templateId;
+
+              return (
+                <Card
+                  key={template.id}
+                  className={`relative p-4 cursor-pointer transition-all hover:shadow-lg border-2 ${
+                    isSelected
+                      ? 'border-primary shadow-md'
+                      : 'border-transparent hover:border-muted'
+                  }`}
+                  onClick={() => onSelectTemplate(templateId)}
+                >
+                  {isSelected && (
+                    <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-1">
+                      <CheckCircle className="h-4 w-4" />
+                    </div>
+                  )}
+
+                  <div className="aspect-[8.5/11] mb-3 rounded-lg overflow-hidden bg-muted flex items-center justify-center text-xs text-muted-foreground">
+                    {template.type.toUpperCase()} Template
+                  </div>
+
+                  <div className="space-y-1">
+                    <h4 className="font-semibold text-sm">{template.name}</h4>
+                    <p className="text-xs text-muted-foreground">
+                      Custom • {template.type.toUpperCase()}
+                    </p>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

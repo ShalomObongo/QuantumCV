@@ -1,4 +1,7 @@
 import { ResumeData, ATSScore } from '@/types';
+import fs from 'node:fs';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 /**
  * Enhanced ATS Scoring System
@@ -24,14 +27,70 @@ export interface EnhancedATSScore extends ATSScore {
 /**
  * Parse PDF buffer and extract text
  */
+let pdfWorkerConfigured = false;
+
+function resolvePdfJsWorkerUrl(): string | undefined {
+  // Turbopack may rewrite `require.resolve(...)` to virtual module IDs (e.g. "[project] ... [app-route]"),
+  // which are not importable by Node at runtime. Prefer a real filesystem path based on `process.cwd()`.
+  const root = process.cwd();
+  const candidates = [
+    path.join(root, 'node_modules', 'pdfjs-dist', 'legacy', 'build', 'pdf.worker.mjs'),
+    path.join(root, 'node_modules', 'pdfjs-dist', 'legacy', 'build', 'pdf.worker.min.mjs'),
+    path.join(root, 'node_modules', 'pdf-parse', 'dist', 'worker', 'pdf.worker.mjs'),
+  ];
+
+  for (const workerPath of candidates) {
+    if (fs.existsSync(workerPath)) {
+      return pathToFileURL(workerPath).href;
+    }
+  }
+  return undefined;
+}
+
 export async function parsePDFContent(pdfBuffer: Buffer): Promise<string> {
   try {
-    // pdf-parse uses named exports in ESM
-    const pdfParse = await import('pdf-parse');
-    // Try to get the function - it might be default or a named export
-    const parseFn = (pdfParse as any).default || pdfParse;
-    const data = await parseFn(pdfBuffer);
-    return data.text;
+    const mod = await import('pdf-parse');
+
+    // pdf-parse v2+ exposes a PDFParse class (not a callable default function).
+    const PDFParseCtor = (mod as any).PDFParse || (mod as any).default?.PDFParse;
+    if (typeof PDFParseCtor === 'function') {
+      // In Next.js dev (Turbopack), pdfjs can fail to resolve a bundled worker chunk.
+      // Configure an explicit workerSrc to a real file (or data URL) before parsing.
+      if (!pdfWorkerConfigured && typeof (PDFParseCtor as any).setWorker === 'function') {
+        try {
+          // Avoid importing `pdf-parse/worker` in Next/Turbopack builds (pulls in @napi-rs/canvas).
+          // Use a real filesystem path to pdfjs-dist's worker instead.
+          const workerUrl = resolvePdfJsWorkerUrl();
+          if (workerUrl) {
+            (PDFParseCtor as any).setWorker(workerUrl);
+          }
+          pdfWorkerConfigured = true;
+        } catch {
+          // If worker setup fails, we'll still try to parse; pdf.js will throw if it truly needs a worker.
+        }
+      }
+
+      const parser = new PDFParseCtor({ data: pdfBuffer });
+      try {
+        const result = await parser.getText();
+        return result?.text ?? '';
+      } finally {
+        if (typeof parser.destroy === 'function') {
+          await parser.destroy();
+        }
+      }
+    }
+
+    // Backwards-compat for older pdf-parse versions that export a callable function.
+    const maybeFn = (mod as any).default ?? mod;
+    if (typeof maybeFn === 'function') {
+      const result = await maybeFn(pdfBuffer);
+      return result?.text ?? '';
+    }
+
+    throw new TypeError(
+      `Unsupported pdf-parse export shape (keys: ${Object.keys(mod).join(', ')})`
+    );
   } catch (error) {
     console.error('Error parsing PDF:', error);
     throw new Error('Failed to parse PDF content');

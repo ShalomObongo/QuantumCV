@@ -1,6 +1,11 @@
-const gradient = require('gradient-string');
-const chalkAnimation = require('chalk-animation');
-const terminalLink = require('terminal-link');
+const gradientModule = require('gradient-string');
+const gradient = gradientModule.default ?? gradientModule;
+
+const chalkAnimationModule = require('chalk-animation');
+const chalkAnimation = chalkAnimationModule.default ?? chalkAnimationModule;
+
+const terminalLinkModule = require('terminal-link');
+const terminalLink = terminalLinkModule.default ?? terminalLinkModule;
 
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const fs = require('fs');
@@ -8,10 +13,13 @@ const path = require('path');
 const readline = require('readline');
 const PDFDocument = require('pdfkit');
 require('dotenv').config();
-const chalk = require('chalk');
-const ora = require('ora');
+const chalkModule = require('chalk');
+const chalk = chalkModule.default ?? chalkModule;
+const oraModule = require('ora');
+const ora = oraModule.default ?? oraModule;
 const figlet = require('figlet');
-const boxen = require('boxen');
+const boxenModule = require('boxen');
+const boxen = boxenModule.default ?? boxenModule;
 const spinner = ora({
     text: 'Processing...',
     color: 'cyan',

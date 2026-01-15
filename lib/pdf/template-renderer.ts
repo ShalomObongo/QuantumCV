@@ -1,10 +1,10 @@
 import PDFDocument from 'pdfkit';
-import { ResumeData, TemplateId } from '@/types';
+import { ResumeData, BuiltInTemplateId } from '@/types';
 import { getTemplate } from '@/lib/templates/config';
 
 export const generateTemplatedResumePDF = (
   resumeData: ResumeData,
-  templateId: TemplateId = 'modern'
+  templateId: BuiltInTemplateId = 'modern'
 ): Promise<Buffer> => {
   const template = getTemplate(templateId);
 

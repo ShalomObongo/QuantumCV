@@ -85,9 +85,14 @@ export interface Document {
   type: 'resume' | 'cover_letter' | 'both';
   variant: 'general' | 'tailored';
   data: ResumeData;
+  content?: string; // cover letter (and other text outputs)
   pdfUrl?: string;
   createdAt: Date;
   jobDescription?: string;
+  jobTitle?: string;
+  company?: string;
+  jobId?: string;
+  title?: string;
   fileName: string;
   templateId?: string;
   atsScore?: ATSScore;
@@ -96,11 +101,38 @@ export interface Document {
   versionName?: string;
 }
 
+export interface CustomTemplateMeta {
+  id: string;
+  name: string;
+  type: 'html' | 'pdf';
+  createdAt: Date;
+  thumbnail?: string;
+}
+
+export interface Job {
+  id: string;
+  userId: string;
+  title: string;
+  company?: string;
+  description: string;
+  url?: string;
+  status: 'saved' | 'applied' | 'interviewing' | 'offer' | 'rejected';
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 // Resume Templates
-export type TemplateId = 'modern' | 'classic' | 'professional' | 'creative' | 'minimal';
+export type BuiltInTemplateId =
+  | 'modern'
+  | 'classic'
+  | 'professional'
+  | 'creative'
+  | 'minimal';
+
+export type TemplateId = BuiltInTemplateId | `custom-${string}`;
 
 export interface ResumeTemplate {
-  id: TemplateId;
+  id: BuiltInTemplateId;
   name: string;
   description: string;
   preview: string;
@@ -168,8 +200,8 @@ export interface ParseResumeResponse {
 export interface ContentSuggestion {
   id: string;
   type: 'improvement' | 'addition' | 'keyword' | 'rephrasing';
-  field: string;
-  originalText: string;
+  field?: string;
+  originalText?: string;
   suggestedText: string;
   reason: string;
   impact: 'high' | 'medium' | 'low';

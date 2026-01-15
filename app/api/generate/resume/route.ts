@@ -1,62 +1,117 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAIProvider, cleanAIResponse } from '@/lib/ai/provider';
 import { buildResumePrompt } from '@/lib/gemini/prompts';
-import { generateResumePDF } from '@/lib/pdf/resume-generator';
 import { generateTemplatedResumePDF } from '@/lib/pdf/template-renderer';
 import { renderCustomTemplate } from '@/lib/pdf/custom-template-renderer';
-import { createDocument, getUserCustomTemplates, CustomTemplate } from '@/lib/firebase/db-utils';
+import { createDocument, getCustomTemplate } from '@/lib/firebase/db-utils';
 import { calculateATSScore } from '@/lib/ats/scoring';
-import { ResumeData, TemplateId } from '@/types';
+import { ResumeData, BuiltInTemplateId } from '@/types';
+import { AuthError, requireAuth } from '@/lib/firebase/server-auth';
+import { buildDocumentFileName } from '@/lib/utils/file-name';
+import { inferJobTitleFromDescription } from '@/lib/utils/job-metadata';
+import { parseJsonFromText } from '@/lib/ai/json';
+import { buildRateLimitHeaders, rateLimit } from '@/lib/server/rate-limit';
+import { enforceMaxBodySize, RequestSizeError } from '@/lib/server/request-size';
+import { z } from 'zod';
+
+const generateResumeSchema = z
+  .object({
+    resumeText: z.string().min(1).optional(),
+    resumeData: z.unknown().optional(),
+    jobDescription: z.string().nullable().optional(),
+    isTailored: z.boolean().optional(),
+    templateId: z.string().optional(),
+    jobTitle: z.string().optional(),
+    company: z.string().optional(),
+    title: z.string().optional(),
+    jobId: z.string().optional(),
+  })
+  .refine((data) => Boolean(data.resumeText || data.resumeData), {
+    message: 'resumeText or resumeData is required',
+  });
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { resumeText, jobDescription, isTailored, userId, templateId } = body;
+    const { uid, name, email } = await requireAuth(request);
 
-    if (!resumeText || !userId) {
+    const limit = rateLimit(`${uid}:generate-resume`, { limit: 5, windowMs: 60_000 });
+    if (!limit.ok) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Too many requests. Please wait and try again.' },
+        { status: 429, headers: buildRateLimitHeaders(limit) }
+      );
+    }
+
+    enforceMaxBodySize(request, 512 * 1024);
+
+    const body = await request.json();
+    const parsed = generateResumeSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid request', details: parsed.error.flatten() },
         { status: 400 }
       );
     }
 
-    // Use templateId if provided, otherwise default to 'modern'
-    const selectedTemplate: TemplateId = templateId || 'modern';
+    const {
+      resumeText,
+      resumeData: providedResumeData,
+      jobDescription,
+      isTailored,
+      templateId,
+      jobTitle,
+      company,
+      title,
+      jobId,
+    } = parsed.data;
 
-    // Generate resume data using AI (with automatic fallback)
-    const aiProvider = getAIProvider();
-    const prompt = buildResumePrompt(resumeText, jobDescription, isTailored);
-    const result = await aiProvider.generateContent(prompt);
-    const cleanedResponse = cleanAIResponse(result.text);
+    const jobDescriptionForPrompt = typeof jobDescription === 'string' ? jobDescription : null;
+    const jobDescriptionForScoring = typeof jobDescription === 'string' ? jobDescription : undefined;
+
+    // Use templateId if provided, otherwise default to 'modern'
+    const selectedTemplate: string = templateId || 'modern';
 
     let resumeData: ResumeData;
-    try {
-      resumeData = JSON.parse(cleanedResponse);
-    } catch (error) {
-      console.error('Failed to parse AI response:', error);
-      return NextResponse.json(
-        { error: 'Failed to generate resume data' },
-        { status: 500 }
-      );
+
+    if (providedResumeData) {
+      resumeData = providedResumeData as ResumeData;
+    } else {
+      if (!resumeText) {
+        return NextResponse.json(
+          { error: 'resumeText is required when resumeData is not provided' },
+          { status: 400 }
+        );
+      }
+
+      // Generate resume data using AI (with automatic fallback)
+      const aiProvider = getAIProvider();
+      const prompt = buildResumePrompt(resumeText, jobDescriptionForPrompt, Boolean(isTailored));
+      const result = await aiProvider.generateContent(prompt);
+      const cleanedResponse = cleanAIResponse(result.text);
+
+      try {
+        resumeData = parseJsonFromText<ResumeData>(cleanedResponse);
+      } catch (error) {
+        console.error('Failed to parse AI response:', error);
+        return NextResponse.json(
+          { error: 'Failed to generate resume data' },
+          { status: 500 }
+        );
+      }
     }
 
     // Calculate ATS score
-    const atsScore = calculateATSScore(resumeData, jobDescription);
+    const atsScore = calculateATSScore(resumeData, jobDescriptionForScoring);
 
     // Generate PDF using selected template (built-in or custom)
     let pdfBuffer: Buffer;
-    let isCustomTemplate = false;
 
     if (selectedTemplate.startsWith('custom-')) {
       // Custom template - fetch and render
-      isCustomTemplate = true;
       const customTemplateId = selectedTemplate.replace('custom-', '');
 
-      // Fetch user's custom templates
-      const customTemplates = await getUserCustomTemplates(userId);
-      const customTemplate = customTemplates.find((t) => t.id === customTemplateId);
-
-      if (!customTemplate) {
+      const customTemplate = await getCustomTemplate(customTemplateId);
+      if (!customTemplate || customTemplate.userId !== uid) {
         return NextResponse.json(
           { error: 'Custom template not found' },
           { status: 404 }
@@ -66,15 +121,31 @@ export async function POST(request: NextRequest) {
       pdfBuffer = await renderCustomTemplate(resumeData, customTemplate);
     } else {
       // Built-in template
-      pdfBuffer = await generateTemplatedResumePDF(resumeData, selectedTemplate);
+      pdfBuffer = await generateTemplatedResumePDF(resumeData, selectedTemplate as BuiltInTemplateId);
     }
 
     // Create document record in Firestore
     const variant = isTailored ? 'tailored' : 'general';
-    const fileName = `resume_${variant}_${Date.now()}.pdf`;
+
+    const candidateName =
+      resumeData?.contactInfo?.name ||
+      name ||
+      (email ? email.split('@')[0] : undefined);
+
+    const inferredJobTitle = jobTitle || inferJobTitleFromDescription(jobDescription);
+    const finalJobTitle = inferredJobTitle || undefined;
+    const finalCompany = typeof company === 'string' && company.trim() ? company.trim() : undefined;
+
+    const fileName = buildDocumentFileName({
+      type: 'resume',
+      variant,
+      candidateName: candidateName || undefined,
+      jobTitle: finalJobTitle,
+      company: finalCompany,
+    });
 
     const documentData: any = {
-      userId,
+      userId: uid,
       type: 'resume',
       variant,
       data: resumeData,
@@ -84,8 +155,24 @@ export async function POST(request: NextRequest) {
     };
 
     // Only include jobDescription if it exists (Firestore doesn't allow undefined)
-    if (jobDescription) {
-      documentData.jobDescription = jobDescription;
+    if (jobDescriptionForScoring) {
+      documentData.jobDescription = jobDescriptionForScoring;
+    }
+
+    if (finalJobTitle) {
+      documentData.jobTitle = finalJobTitle;
+    }
+
+    if (finalCompany) {
+      documentData.company = finalCompany;
+    }
+
+    if (typeof title === 'string' && title.trim()) {
+      documentData.title = title.trim();
+    }
+
+    if (typeof jobId === 'string' && jobId.trim()) {
+      documentData.jobId = jobId.trim();
     }
 
     const documentId = await createDocument(documentData);
@@ -103,6 +190,12 @@ export async function POST(request: NextRequest) {
     });
   } catch (error: any) {
     console.error('Resume generation error:', error);
+    if (error instanceof AuthError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+    if (error instanceof RequestSizeError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
     return NextResponse.json(
       { error: error.message || 'Failed to generate resume' },
       { status: 500 }

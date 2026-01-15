@@ -115,8 +115,36 @@ Critical requirements:
 
 export const buildCoverLetterPrompt = (
   resumeText: string,
-  jobDescription: string
+  jobDescription: string,
+  options?: {
+    tone?: 'professional' | 'friendly' | 'bold';
+    length?: 'short' | 'medium' | 'long';
+    format?: 'paragraphs' | 'bullets';
+  }
 ): string => {
+  const tone = options?.tone || 'professional';
+  const length = options?.length || 'medium';
+  const format = options?.format || 'paragraphs';
+
+  const lengthGuidance =
+    length === 'short'
+      ? 'Keep it short (roughly 150-220 words).'
+      : length === 'long'
+        ? 'Make it longer and more detailed (roughly 400-550 words).'
+        : 'Keep it medium length (roughly 250-350 words).';
+
+  const formatGuidance =
+    format === 'bullets'
+      ? 'Use a brief intro paragraph, then 3-5 bullet points for key qualifications, then a closing paragraph.'
+      : 'Use 3-5 concise paragraphs (no bullet points).';
+
+  const toneGuidance =
+    tone === 'friendly'
+      ? 'Tone: warm, confident, and human (still professional).'
+      : tone === 'bold'
+        ? 'Tone: confident and assertive (avoid arrogance).'
+        : 'Tone: professional and direct.';
+
   return `Create a professional and compelling cover letter based on the candidate's resume and the job description.
 
     Important requirements:
@@ -130,6 +158,9 @@ export const buildCoverLetterPrompt = (
     8. Include a strong closing paragraph
     9. DO NOT include any markdown formatting
     10. DO NOT rewrite the job description in the cover letter
+    11. ${toneGuidance}
+    12. ${lengthGuidance}
+    13. ${formatGuidance}
 
     Resume:
     ${resumeText}

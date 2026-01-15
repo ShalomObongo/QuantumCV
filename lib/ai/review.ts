@@ -1,6 +1,7 @@
 import { getAIProvider, cleanAIResponse } from './provider';
 import { ResumeData } from '@/types';
 import { EnhancedATSScore } from '../ats/enhanced-scorer';
+import { parseJsonFromText } from './json';
 
 /**
  * AI Review System
@@ -45,7 +46,7 @@ export async function generateAIReview(
   const cleanedResponse = cleanAIResponse(result.text);
 
   try {
-    const parsedReview = JSON.parse(cleanedResponse);
+    const parsedReview = parseJsonFromText<AIReviewResult>(cleanedResponse);
     return parsedReview;
   } catch (error) {
     console.error('Failed to parse AI review:', error);
@@ -68,7 +69,7 @@ export async function applyAcceptedSuggestions(
   const cleanedResponse = cleanAIResponse(result.text);
 
   try {
-    const updatedResumeData = JSON.parse(cleanedResponse);
+    const updatedResumeData = parseJsonFromText<ResumeData>(cleanedResponse);
     return updatedResumeData;
   } catch (error) {
     console.error('Failed to apply suggestions:', error);
@@ -242,7 +243,7 @@ Return the JSON array:`;
   const cleanedResponse = cleanAIResponse(result.text);
 
   try {
-    return JSON.parse(cleanedResponse);
+    return parseJsonFromText<ReviewSuggestion[]>(cleanedResponse);
   } catch (error) {
     console.error('Failed to parse section suggestions:', error);
     return [];

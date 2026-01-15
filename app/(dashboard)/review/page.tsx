@@ -10,6 +10,7 @@ import { Upload, FileText, CheckCircle2, XCircle, Download, AlertCircle } from '
 import { ReviewSuggestion } from '@/lib/ai/review';
 import { ResumeData } from '@/types';
 import { EnhancedATSScore } from '@/lib/ats/enhanced-scorer';
+import { getAuthHeaders } from '@/lib/firebase/client-token';
 
 export default function ReviewPage() {
   const [user] = useAuthState(auth!);
@@ -33,7 +34,6 @@ export default function ReviewPage() {
     try {
       const formData = new FormData();
       formData.append('pdf', pdfFile);
-      formData.append('userId', user.uid);
       if (jobDescription) {
         formData.append('jobDescription', jobDescription);
       }
@@ -41,6 +41,7 @@ export default function ReviewPage() {
       const response = await fetch('/api/review-resume', {
         method: 'POST',
         body: formData,
+        headers: await getAuthHeaders(user),
       });
 
       if (!response.ok) {
@@ -79,7 +80,10 @@ export default function ReviewPage() {
 
       const response = await fetch('/api/apply-suggestions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(await getAuthHeaders(user!)),
+        },
         body: JSON.stringify({
           resumeData: reviewResult.resumeData,
           acceptedSuggestions: selectedSuggestions,
@@ -430,7 +434,7 @@ export default function ReviewPage() {
                         <p className="text-sm text-muted-foreground mb-2">{suggestion.suggestion}</p>
                         {suggestion.example && (
                           <div className="mt-2 p-2 bg-background/50 rounded text-sm italic">
-                            Example: "{suggestion.example}"
+                            Example: {suggestion.example}
                           </div>
                         )}
                         <p className="text-xs text-muted-foreground mt-2">

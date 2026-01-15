@@ -1,5 +1,5 @@
 import { adminDb as db } from './admin';
-import { UserProfile, Document, ResumeData } from '@/types';
+import { UserProfile, Document, ResumeData, Job } from '@/types';
 import { FieldValue } from 'firebase-admin/firestore';
 
 // User Profile Operations
@@ -263,6 +263,134 @@ export const deleteCustomTemplate = async (templateId: string): Promise<void> =>
     await db.collection('customTemplates').doc(templateId).delete();
   } catch (error) {
     console.error('Error deleting custom template:', error);
+    throw error;
+  }
+};
+
+export const getCustomTemplate = async (
+  templateId: string
+): Promise<CustomTemplate | null> => {
+  if (!db) throw new Error('Firebase Firestore not initialized');
+
+  try {
+    const docRef = db.collection('customTemplates').doc(templateId);
+    const docSnap = await docRef.get();
+
+    if (!docSnap.exists) return null;
+    const data = docSnap.data();
+    if (!data) return null;
+
+    return {
+      id: docSnap.id,
+      ...data,
+      createdAt: data.createdAt?.toDate() || new Date(),
+    } as CustomTemplate;
+  } catch (error) {
+    console.error('Error getting custom template:', error);
+    throw error;
+  }
+};
+
+// Job Operations
+export const createJob = async (
+  jobData: Omit<Job, 'id' | 'createdAt' | 'updatedAt'>
+): Promise<string> => {
+  if (!db) throw new Error('Firebase Firestore not initialized');
+
+  try {
+    const docRef = db.collection('jobs').doc();
+    await docRef.set({
+      ...jobData,
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+    return docRef.id;
+  } catch (error) {
+    console.error('Error creating job:', error);
+    throw error;
+  }
+};
+
+export const getUserJobs = async (
+  userId: string,
+  limitCount: number = 50
+): Promise<Job[]> => {
+  if (!db) throw new Error('Firebase Firestore not initialized');
+
+  try {
+    const querySnapshot = await db
+      .collection('jobs')
+      .where('userId', '==', userId)
+      .orderBy('createdAt', 'desc')
+      .limit(limitCount)
+      .get();
+
+    const jobs: Job[] = [];
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      jobs.push({
+        id: doc.id,
+        ...data,
+        createdAt: data.createdAt?.toDate() || new Date(),
+        updatedAt: data.updatedAt?.toDate() || new Date(),
+      } as Job);
+    });
+
+    return jobs;
+  } catch (error) {
+    console.error('Error getting user jobs:', error);
+    throw error;
+  }
+};
+
+export const getJob = async (jobId: string): Promise<Job | null> => {
+  if (!db) throw new Error('Firebase Firestore not initialized');
+
+  try {
+    const docRef = db.collection('jobs').doc(jobId);
+    const docSnap = await docRef.get();
+
+    if (!docSnap.exists) return null;
+    const data = docSnap.data();
+    if (!data) return null;
+
+    return {
+      id: docSnap.id,
+      ...data,
+      createdAt: data.createdAt?.toDate() || new Date(),
+      updatedAt: data.updatedAt?.toDate() || new Date(),
+    } as Job;
+  } catch (error) {
+    console.error('Error getting job:', error);
+    throw error;
+  }
+};
+
+export const updateJob = async (
+  jobId: string,
+  updates: Partial<Job>
+): Promise<void> => {
+  if (!db) throw new Error('Firebase Firestore not initialized');
+
+  try {
+    const docRef = db.collection('jobs').doc(jobId);
+    await docRef.update({
+      ...updates,
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+  } catch (error) {
+    console.error('Error updating job:', error);
+    throw error;
+  }
+};
+
+export const deleteJob = async (jobId: string): Promise<void> => {
+  if (!db) throw new Error('Firebase Firestore not initialized');
+
+  try {
+    await db.collection('jobs').doc(jobId).delete();
+  } catch (error) {
+    console.error('Error deleting job:', error);
     throw error;
   }
 };

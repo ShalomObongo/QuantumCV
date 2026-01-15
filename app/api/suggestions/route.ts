@@ -1,25 +1,42 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAIProvider, cleanAIResponse } from '@/lib/ai/provider';
 import { ContentSuggestion } from '@/types';
+import { AuthError, requireAuth } from '@/lib/firebase/server-auth';
+import { parseJsonFromText } from '@/lib/ai/json';
+import { buildRateLimitHeaders, rateLimit } from '@/lib/server/rate-limit';
+import { enforceMaxBodySize, RequestSizeError } from '@/lib/server/request-size';
+import { z } from 'zod';
+
+const suggestionsSchema = z.object({
+  content: z.string().min(1),
+  contentType: z.enum(['summary', 'experience', 'skills', 'general']),
+  jobDescription: z.string().optional(),
+});
 
 export async function POST(request: NextRequest) {
   try {
+    const { uid } = await requireAuth(request);
+
+    const limit = rateLimit(`${uid}:suggestions`, { limit: 20, windowMs: 60_000 });
+    if (!limit.ok) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please wait and try again.' },
+        { status: 429, headers: buildRateLimitHeaders(limit) }
+      );
+    }
+
+    enforceMaxBodySize(request, 256 * 1024);
+
     const body = await request.json();
-    const { content, contentType, jobDescription } = body;
-
-    if (!content || typeof content !== 'string') {
+    const parsed = suggestionsSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Content is required' },
+        { error: 'Invalid request', details: parsed.error.flatten() },
         { status: 400 }
       );
     }
 
-    if (!contentType || !['summary', 'experience', 'skills', 'general'].includes(contentType)) {
-      return NextResponse.json(
-        { error: 'Invalid content type' },
-        { status: 400 }
-      );
-    }
+    const { content, contentType, jobDescription } = parsed.data;
 
     // Build suggestion prompt based on content type
     const prompt = buildSuggestionPrompt(content, contentType, jobDescription);
@@ -31,7 +48,7 @@ export async function POST(request: NextRequest) {
 
     let suggestions: ContentSuggestion[];
     try {
-      const parsed = JSON.parse(cleanedResponse);
+      const parsed = parseJsonFromText<any>(cleanedResponse);
       suggestions = Array.isArray(parsed) ? parsed : parsed.suggestions || [];
     } catch (error) {
       console.error('Failed to parse suggestions:', error);
@@ -52,6 +69,12 @@ export async function POST(request: NextRequest) {
     });
   } catch (error: any) {
     console.error('Suggestions error:', error);
+    if (error instanceof AuthError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+    if (error instanceof RequestSizeError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
     return NextResponse.json(
       { error: error.message || 'Failed to generate suggestions' },
       { status: 500 }

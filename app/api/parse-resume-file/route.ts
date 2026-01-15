@@ -1,22 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAIProvider, cleanAIResponse } from '@/lib/ai/provider';
-import { ResumeData } from '@/types';
 import { AuthError, requireAuth } from '@/lib/firebase/server-auth';
+import { parsePDFContent } from '@/lib/ats/enhanced-scorer';
 import { buildResumeParsingPrompt } from '@/lib/ai/resume-parsing';
+import type { ResumeData } from '@/types';
 import { parseJsonFromText } from '@/lib/ai/json';
 import { buildRateLimitHeaders, rateLimit } from '@/lib/server/rate-limit';
-import { enforceMaxBodySize, RequestSizeError } from '@/lib/server/request-size';
-import { z } from 'zod';
 
-const parseResumeSchema = z.object({
-  resumeText: z.string().min(1),
-});
+function isPdfFile(file: File): boolean {
+  if (file.type === 'application/pdf') return true;
+  return file.name.toLowerCase().endsWith('.pdf');
+}
 
 export async function POST(request: NextRequest) {
   try {
     const { uid } = await requireAuth(request);
 
-    const limit = rateLimit(`${uid}:parse-resume`, { limit: 10, windowMs: 60_000 });
+    const limit = rateLimit(`${uid}:parse-resume-file`, { limit: 10, windowMs: 60_000 });
     if (!limit.ok) {
       return NextResponse.json(
         { error: 'Too many requests. Please wait and try again.' },
@@ -24,24 +24,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    enforceMaxBodySize(request, 256 * 1024);
+    const formData = await request.formData();
+    const file = formData.get('file') as File | null;
 
-    const body = await request.json();
-    const parsed = parseResumeSchema.safeParse(body);
-    if (!parsed.success) {
+    if (!file) {
+      return NextResponse.json({ error: 'File is required' }, { status: 400 });
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      return NextResponse.json({ error: 'File size must be less than 5MB' }, { status: 413 });
+    }
+
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    const resumeText = isPdfFile(file) ? await parsePDFContent(buffer) : buffer.toString('utf-8');
+
+    if (!resumeText || resumeText.trim().length < 50) {
       return NextResponse.json(
-        { error: 'Invalid request', details: parsed.error.flatten() },
-        { status: 400 }
+        { error: 'File appears to be empty or too short to parse' },
+        { status: 422 }
       );
     }
 
-    const { resumeText } = parsed.data;
-
-    // Build parsing prompt
-    const prompt = buildResumeParsingPrompt(resumeText);
-
-    // Use AI to parse the resume (with automatic fallback)
     const aiProvider = getAIProvider();
+    const prompt = buildResumeParsingPrompt(resumeText);
     const result = await aiProvider.generateContent(prompt);
     const cleanedResponse = cleanAIResponse(result.text);
 
@@ -51,12 +58,11 @@ export async function POST(request: NextRequest) {
     } catch (error) {
       console.error('Failed to parse AI response:', error);
       return NextResponse.json(
-        { error: 'Failed to parse resume data. Please check the format and try again.' },
+        { error: 'Failed to parse resume data. Please try again.' },
         { status: 500 }
       );
     }
 
-    // Validate parsed data has required fields
     if (!parsedData.contactInfo || !parsedData.contactInfo.name) {
       return NextResponse.json(
         { error: 'Could not extract contact information from resume' },
@@ -67,17 +73,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: parsedData,
+      fileName: file.name,
+      fileType: isPdfFile(file) ? 'pdf' : 'text',
     });
   } catch (error: any) {
-    console.error('Resume parsing error:', error);
+    console.error('Resume file parsing error:', error);
     if (error instanceof AuthError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
-    if (error instanceof RequestSizeError) {
-      return NextResponse.json({ error: error.message }, { status: error.status });
-    }
     return NextResponse.json(
-      { error: error.message || 'Failed to parse resume' },
+      { error: error.message || 'Failed to parse resume file' },
       { status: 500 }
     );
   }

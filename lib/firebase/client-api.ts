@@ -1,4 +1,6 @@
 import { Document } from '@/types';
+import type { User } from 'firebase/auth';
+import { getAuthHeaders } from '@/lib/firebase/client-token';
 
 /**
  * Client-side API helpers for Firebase operations
@@ -6,13 +8,15 @@ import { Document } from '@/types';
  */
 
 export const getUserDocuments = async (
-  userId: string,
+  user: User,
   limitCount?: number
 ): Promise<Document[]> => {
-  const params = new URLSearchParams({ userId });
+  const params = new URLSearchParams();
   if (limitCount) params.append('limit', limitCount.toString());
 
-  const response = await fetch(`/api/documents?${params}`);
+  const response = await fetch(`/api/documents?${params}`, {
+    headers: await getAuthHeaders(user),
+  });
   if (!response.ok) {
     throw new Error('Failed to fetch documents');
   }
@@ -21,8 +25,13 @@ export const getUserDocuments = async (
   return data.documents || [];
 };
 
-export const getDocument = async (documentId: string): Promise<Document | null> => {
-  const response = await fetch(`/api/documents?documentId=${documentId}`);
+export const getDocument = async (
+  user: User,
+  documentId: string
+): Promise<Document | null> => {
+  const response = await fetch(`/api/documents?documentId=${documentId}`, {
+    headers: await getAuthHeaders(user),
+  });
   if (!response.ok) {
     if (response.status === 404) return null;
     throw new Error('Failed to fetch document');
@@ -32,9 +41,10 @@ export const getDocument = async (documentId: string): Promise<Document | null> 
   return data.document || null;
 };
 
-export const deleteDocument = async (documentId: string): Promise<void> => {
+export const deleteDocument = async (user: User, documentId: string): Promise<void> => {
   const response = await fetch(`/api/documents?documentId=${documentId}`, {
     method: 'DELETE',
+    headers: await getAuthHeaders(user),
   });
 
   if (!response.ok) {

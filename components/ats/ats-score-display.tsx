@@ -156,7 +156,7 @@ export function ATSScoreDisplay({ score, showDetails = true }: ATSScoreDisplayPr
               <CardHeader>
                 <CardTitle>Issues Detected</CardTitle>
                 <CardDescription>
-                  Problems that may affect your resume's ATS performance
+                  Problems that may affect your resume&apos;s ATS performance
                 </CardDescription>
               </CardHeader>
               <CardContent>

@@ -9,6 +9,7 @@ import { Loading } from '@/components/ui/loading-spinner';
 import { Download, Eye, RefreshCw } from 'lucide-react';
 import { getAllTemplates } from '@/lib/templates/config';
 import { ResumeData, TemplateId, ResumeTemplate } from '@/types';
+import { getAuthHeaders } from '@/lib/firebase/client-token';
 
 export default function TemplateComparePage() {
   const [user] = useAuthState(auth!);
@@ -29,7 +30,9 @@ export default function TemplateComparePage() {
       if (!user) return;
 
       try {
-        const response = await fetch(`/api/resume-data?userId=${user.uid}`);
+        const response = await fetch(`/api/resume-data`, {
+          headers: await getAuthHeaders(user),
+        });
         if (response.ok) {
           const data = await response.json();
           setResumeData(data.resumeData);
@@ -55,10 +58,12 @@ export default function TemplateComparePage() {
       // Generate PDF for template A
       const responseA = await fetch('/api/generate/resume', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(await getAuthHeaders(user)),
+        },
         body: JSON.stringify({
-          resumeText: JSON.stringify(resumeData),
-          userId: user.uid,
+          resumeData,
           templateId: templateA,
           isTailored: false,
         }),
@@ -70,10 +75,12 @@ export default function TemplateComparePage() {
       // Generate PDF for template B
       const responseB = await fetch('/api/generate/resume', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(await getAuthHeaders(user)),
+        },
         body: JSON.stringify({
-          resumeText: JSON.stringify(resumeData),
-          userId: user.uid,
+          resumeData,
           templateId: templateB,
           isTailored: false,
         }),
@@ -95,7 +102,8 @@ export default function TemplateComparePage() {
   };
 
   const downloadPDF = (base64: string, templateName: string) => {
-    const blob = new Blob([Buffer.from(base64, 'base64')], { type: 'application/pdf' });
+    const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+    const blob = new Blob([bytes], { type: 'application/pdf' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -107,7 +115,8 @@ export default function TemplateComparePage() {
   };
 
   const viewPDF = (base64: string) => {
-    const blob = new Blob([Buffer.from(base64, 'base64')], { type: 'application/pdf' });
+    const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+    const blob = new Blob([bytes], { type: 'application/pdf' });
     const url = URL.createObjectURL(blob);
     window.open(url, '_blank');
   };
@@ -292,7 +301,7 @@ export default function TemplateComparePage() {
         </CardHeader>
         <CardContent>
           <ul className="space-y-2 text-sm list-disc list-inside text-muted-foreground">
-            <li>Consider the industry you're applying to - creative fields may appreciate modern designs</li>
+            <li>Consider the industry you&apos;re applying to - creative fields may appreciate modern designs</li>
             <li>Traditional industries (finance, law) often prefer classic, conservative layouts</li>
             <li>Ensure your most important information stands out in the chosen layout</li>
             <li>Test readability - can you quickly find key details in 6 seconds?</li>

@@ -1,11 +1,14 @@
 'use client';
 
 import { useState, useCallback, useRef } from 'react';
+import { useAuthState } from 'react-firebase-hooks/auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Upload, FileText, CheckCircle2, X, AlertCircle } from 'lucide-react';
 import { ResumeData } from '@/types';
+import { auth } from '@/lib/firebase/config';
+import { getAuthHeaders } from '@/lib/firebase/client-token';
 
 interface ResumeUploaderProps {
   onDataExtracted: (data: ResumeData) => void;
@@ -13,6 +16,7 @@ interface ResumeUploaderProps {
 }
 
 export function ResumeUploader({ onDataExtracted, onError }: ResumeUploaderProps) {
+  const [user] = useAuthState(auth!);
   const [isDragging, setIsDragging] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [parsing, setParsing] = useState(false);
@@ -79,54 +83,26 @@ export function ResumeUploader({ onDataExtracted, onError }: ResumeUploaderProps
     setSuccess(false);
   };
 
-  const extractTextFromFile = async (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-
-      reader.onload = (e) => {
-        const text = e.target?.result as string;
-        if (!text || text.trim().length < 50) {
-          reject(new Error('File appears to be empty or too short'));
-          return;
-        }
-        resolve(text);
-      };
-
-      reader.onerror = () => {
-        reject(new Error('Failed to read file'));
-      };
-
-      if (file.type === 'application/pdf') {
-        // For PDFs, we'll read as text (this is a simplified approach)
-        // In production, you'd want to use a proper PDF parsing library
-        reader.readAsText(file);
-      } else {
-        reader.readAsText(file);
-      }
-    });
-  };
-
   const handleParse = async () => {
     if (!file) return;
+    if (!user) {
+      setError('You must be signed in to parse a resume');
+      onError?.('You must be signed in to parse a resume');
+      return;
+    }
 
     try {
       setParsing(true);
       setError(null);
       setSuccess(false);
 
-      // Extract text from file
-      let resumeText: string;
-      try {
-        resumeText = await extractTextFromFile(file);
-      } catch (err: any) {
-        throw new Error(`Failed to read file: ${err.message}`);
-      }
+      const formData = new FormData();
+      formData.append('file', file);
 
-      // Call parse API
-      const response = await fetch('/api/parse-resume', {
+      const response = await fetch('/api/parse-resume-file', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ resumeText }),
+        headers: await getAuthHeaders(user),
+        body: formData,
       });
 
       const data = await response.json();

@@ -36,6 +36,21 @@ export function NavBar() {
           <Link href="/generate">
             <Button variant="ghost">Generate</Button>
           </Link>
+          <Link href="/review">
+            <Button variant="ghost">Review</Button>
+          </Link>
+          <Link href="/edit-resume">
+            <Button variant="ghost">Resume Data</Button>
+          </Link>
+          <Link href="/jobs">
+            <Button variant="ghost">Jobs</Button>
+          </Link>
+          <Link href="/templates">
+            <Button variant="ghost">Templates</Button>
+          </Link>
+          <Link href="/template-compare">
+            <Button variant="ghost">Compare</Button>
+          </Link>
           <Link href="/history">
             <Button variant="ghost">History</Button>
           </Link>

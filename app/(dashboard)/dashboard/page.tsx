@@ -22,7 +22,7 @@ export default function DashboardPage() {
       if (!user) return;
 
       try {
-        const docs = await getUserDocuments(user.uid, 5);
+        const docs = await getUserDocuments(user, 5);
         setDocuments(docs);
       } catch (error) {
         console.error('Error fetching documents:', error);
@@ -46,7 +46,7 @@ export default function DashboardPage() {
       <div>
         <h1 className="text-3xl font-bold">Welcome back!</h1>
         <p className="text-muted-foreground mt-2">
-          Here's what's happening with your documents
+          Here&apos;s what&apos;s happening with your documents
         </p>
       </div>
 
