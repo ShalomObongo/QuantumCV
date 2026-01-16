@@ -10,7 +10,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loading } from '@/components/ui/loading-spinner';
-import { Trash2, Upload } from 'lucide-react';
+import { Trash2, Upload, Download, Info } from 'lucide-react';
+import { downloadBlob } from '@/lib/utils/helpers';
 
 export default function TemplatesPage() {
   const [user] = useAuthState(auth!);
@@ -113,6 +114,66 @@ export default function TemplatesPage() {
     }
   };
 
+  const handleDownload = async (template: CustomTemplateMeta) => {
+    if (!user) return;
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/custom-templates/download?templateId=${template.id}`, {
+        headers: await getAuthHeaders(user),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to download template');
+      }
+
+      const blob = await response.blob();
+      const suggested =
+        response.headers.get('X-Template-File-Name') ||
+        `${template.name || 'custom_template'}.${template.type === 'pdf' ? 'pdf' : 'html'}`;
+      downloadBlob(blob, suggested);
+    } catch (err: any) {
+      setError(err.message || 'Failed to download template');
+    }
+  };
+
+  const handleAnalyze = async (template: CustomTemplateMeta) => {
+    if (!user) return;
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/custom-templates/analyze?templateId=${template.id}`, {
+        headers: await getAuthHeaders(user),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to analyze template');
+      }
+
+      const fields: Array<{ name: string; type: string }> = data.fields || [];
+      const fillable = Boolean(data.fillable);
+
+      const message =
+        template.type !== 'pdf'
+          ? 'Only PDF templates can be analyzed for fillable fields.'
+          : fields.length === 0
+            ? 'No form fields found. This PDF is not fillable, so QuantumCV cannot populate it with your resume data.'
+            : [
+                `Fillable: ${fillable ? 'Yes' : 'No'}`,
+                '',
+                'Field names (rename these in your PDF editor to match resume keys like name, email, phone, summary, skills, experience, education):',
+                '',
+                ...fields.map((f) => `- ${f.name} (${f.type})`),
+              ].join('\n');
+
+      alert(message);
+    } catch (err: any) {
+      setError(err.message || 'Failed to analyze template');
+    }
+  };
+
   if (loading) {
     return <Loading text="Loading templates..." />;
   }
@@ -139,7 +200,7 @@ export default function TemplatesPage() {
             Upload Custom Template
           </CardTitle>
           <CardDescription>
-            After uploading, custom templates appear in the Resume template picker as “Custom”.
+            After uploading, custom templates appear in the Resume template picker as “Custom”. PDF templates must be fillable PDF forms to work for generation.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -166,6 +227,11 @@ export default function TemplatesPage() {
                 <option value="html">HTML</option>
                 <option value="pdf">PDF</option>
               </select>
+              {templateType === 'pdf' && (
+                <p className="text-xs text-muted-foreground">
+                  Tip: For PDF templates, QuantumCV supports fillable PDF forms (AcroForm). Use “Analyze” after upload to see field names.
+                </p>
+              )}
             </div>
           </div>
 
@@ -211,14 +277,34 @@ export default function TemplatesPage() {
                       {t.type.toUpperCase()} • {new Date(t.createdAt).toLocaleDateString()}
                     </div>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDelete(t.id)}
-                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDownload(t)}
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Download
+                    </Button>
+                    {t.type === 'pdf' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleAnalyze(t)}
+                      >
+                        <Info className="h-4 w-4 mr-2" />
+                        Analyze
+                      </Button>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDelete(t.id)}
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -228,4 +314,3 @@ export default function TemplatesPage() {
     </div>
   );
 }
-

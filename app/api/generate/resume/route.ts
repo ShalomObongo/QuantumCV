@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAIProvider, cleanAIResponse } from '@/lib/ai/provider';
 import { buildResumePrompt } from '@/lib/gemini/prompts';
 import { generateTemplatedResumePDF } from '@/lib/pdf/template-renderer';
-import { renderCustomTemplate } from '@/lib/pdf/custom-template-renderer';
+import { CustomTemplateRenderError, renderCustomTemplate } from '@/lib/pdf/custom-template-renderer';
 import { createDocument, getCustomTemplate } from '@/lib/firebase/db-utils';
 import { calculateATSScore } from '@/lib/ats/scoring';
 import { ResumeData, BuiltInTemplateId } from '@/types';
@@ -192,6 +192,9 @@ export async function POST(request: NextRequest) {
     console.error('Resume generation error:', error);
     if (error instanceof AuthError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+    if (error instanceof CustomTemplateRenderError) {
+      return NextResponse.json({ error: error.message, code: error.code }, { status: error.status });
     }
     if (error instanceof RequestSizeError) {
       return NextResponse.json({ error: error.message }, { status: error.status });

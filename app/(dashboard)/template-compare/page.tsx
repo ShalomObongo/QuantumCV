@@ -1,28 +1,41 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '@/lib/firebase/config';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loading } from '@/components/ui/loading-spinner';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Download, Eye, RefreshCw } from 'lucide-react';
 import { getAllTemplates } from '@/lib/templates/config';
-import { ResumeData, TemplateId, ResumeTemplate } from '@/types';
+import { CustomTemplateMeta, ResumeData, TemplateId } from '@/types';
 import { getAuthHeaders } from '@/lib/firebase/client-token';
+import { downloadBlob } from '@/lib/utils/helpers';
 
 export default function TemplateComparePage() {
   const [user] = useAuthState(auth!);
   const [loading, setLoading] = useState(false);
+  const [resumeLoading, setResumeLoading] = useState(false);
   const [templateA, setTemplateA] = useState<TemplateId>('modern');
   const [templateB, setTemplateB] = useState<TemplateId>('classic');
   const [resumeData, setResumeData] = useState<ResumeData | null>(null);
+  const [customTemplates, setCustomTemplates] = useState<CustomTemplateMeta[]>([]);
+  const [customLoading, setCustomLoading] = useState(false);
   const [generatedPDFs, setGeneratedPDFs] = useState<{
     a: string | null;
     b: string | null;
+    fileNameA?: string;
+    fileNameB?: string;
   }>({ a: null, b: null });
 
-  const allTemplates = getAllTemplates();
+  const builtInTemplates = getAllTemplates();
+  const customTemplateMap = useMemo(() => {
+    const map = new Map<string, CustomTemplateMeta>();
+    for (const t of customTemplates) {
+      map.set(`custom-${t.id}`, t);
+    }
+    return map;
+  }, [customTemplates]);
 
   useEffect(() => {
     // Load saved resume data
@@ -30,6 +43,7 @@ export default function TemplateComparePage() {
       if (!user) return;
 
       try {
+        setResumeLoading(true);
         const response = await fetch(`/api/resume-data`, {
           headers: await getAuthHeaders(user),
         });
@@ -39,11 +53,43 @@ export default function TemplateComparePage() {
         }
       } catch (error) {
         console.error('Error loading resume data:', error);
+      } finally {
+        setResumeLoading(false);
       }
     };
 
     loadResumeData();
   }, [user]);
+
+  useEffect(() => {
+    const loadCustomTemplates = async () => {
+      if (!user) return;
+
+      try {
+        setCustomLoading(true);
+        const response = await fetch('/api/custom-templates', {
+          headers: await getAuthHeaders(user),
+        });
+        const data = await response.json();
+        if (response.ok) {
+          setCustomTemplates(data.templates || []);
+        } else {
+          setCustomTemplates([]);
+        }
+      } catch (error) {
+        console.error('Error loading custom templates:', error);
+        setCustomTemplates([]);
+      } finally {
+        setCustomLoading(false);
+      }
+    };
+
+    loadCustomTemplates();
+  }, [user]);
+
+  const clearResults = () => {
+    setGeneratedPDFs({ a: null, b: null });
+  };
 
   const generateComparison = async () => {
     if (!user || !resumeData) {
@@ -52,66 +98,70 @@ export default function TemplateComparePage() {
     }
 
     setLoading(true);
-    setGeneratedPDFs({ a: null, b: null });
+    clearResults();
 
     try {
-      // Generate PDF for template A
-      const responseA = await fetch('/api/generate/resume', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(await getAuthHeaders(user)),
-        },
-        body: JSON.stringify({
-          resumeData,
-          templateId: templateA,
-          isTailored: false,
+      const authHeaders = await getAuthHeaders(user);
+
+      const [responseA, responseB] = await Promise.all([
+        fetch('/api/generate/resume', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...authHeaders,
+          },
+          body: JSON.stringify({
+            resumeData,
+            templateId: templateA,
+            isTailored: false,
+          }),
         }),
-      });
-
-      if (!responseA.ok) throw new Error('Failed to generate template A');
-      const dataA = await responseA.json();
-
-      // Generate PDF for template B
-      const responseB = await fetch('/api/generate/resume', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(await getAuthHeaders(user)),
-        },
-        body: JSON.stringify({
-          resumeData,
-          templateId: templateB,
-          isTailored: false,
+        fetch('/api/generate/resume', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...authHeaders,
+          },
+          body: JSON.stringify({
+            resumeData,
+            templateId: templateB,
+            isTailored: false,
+          }),
         }),
-      });
+      ]);
 
-      if (!responseB.ok) throw new Error('Failed to generate template B');
-      const dataB = await responseB.json();
+      const dataA = await responseA.json().catch(() => ({}));
+      const dataB = await responseB.json().catch(() => ({}));
+
+      if (!responseA.ok) {
+        throw new Error(dataA.error || 'Failed to generate template A');
+      }
+      if (!responseB.ok) {
+        throw new Error(dataB.error || 'Failed to generate template B');
+      }
 
       setGeneratedPDFs({
         a: dataA.pdf,
         b: dataB.pdf,
+        fileNameA: dataA.fileName,
+        fileNameB: dataB.fileName,
       });
     } catch (error) {
       console.error('Error generating comparison:', error);
-      alert('Failed to generate template comparison. Please try again.');
+      alert(
+        error instanceof Error
+          ? error.message
+          : 'Failed to generate template comparison. Please try again.'
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  const downloadPDF = (base64: string, templateName: string) => {
+  const downloadPDF = (base64: string, fileName: string) => {
     const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
     const blob = new Blob([bytes], { type: 'application/pdf' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `resume-${templateName}-${Date.now()}.pdf`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    downloadBlob(blob, fileName);
   };
 
   const viewPDF = (base64: string) => {
@@ -121,8 +171,13 @@ export default function TemplateComparePage() {
     window.open(url, '_blank');
   };
 
-  const templateConfigA = allTemplates.find((t) => t.id === templateA);
-  const templateConfigB = allTemplates.find((t) => t.id === templateB);
+  const templateConfigA = builtInTemplates.find((t) => t.id === templateA);
+  const templateConfigB = builtInTemplates.find((t) => t.id === templateB);
+  const customConfigA = customTemplateMap.get(templateA);
+  const customConfigB = customTemplateMap.get(templateB);
+
+  const templateLabelA = templateConfigA?.name || customConfigA?.name || templateA;
+  const templateLabelB = templateConfigB?.name || customConfigB?.name || templateB;
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
@@ -143,15 +198,33 @@ export default function TemplateComparePage() {
           <CardContent>
             <select
               value={templateA}
-              onChange={(e) => setTemplateA(e.target.value as TemplateId)}
+              onChange={(e) => {
+                setTemplateA(e.target.value as TemplateId);
+                clearResults();
+              }}
               className="w-full p-2 border rounded-md"
             >
-              {allTemplates.map((template) => (
-                <option key={template.id} value={template.id}>
-                  {template.name}
-                </option>
-              ))}
+              <optgroup label="Built-in">
+                {builtInTemplates.map((template) => (
+                  <option key={template.id} value={template.id}>
+                    {template.name}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="Custom">
+                {customTemplates.map((template) => (
+                  <option key={template.id} value={`custom-${template.id}`}>
+                    {template.name} (Custom {template.type.toUpperCase()})
+                  </option>
+                ))}
+              </optgroup>
             </select>
+            {customLoading && (
+              <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                <LoadingSpinner size="sm" />
+                Loading custom templates…
+              </div>
+            )}
             {templateConfigA && (
               <div className="mt-4 space-y-2">
                 <div className="flex items-center space-x-2">
@@ -167,6 +240,18 @@ export default function TemplateComparePage() {
                 </p>
               </div>
             )}
+            {customConfigA && (
+              <div className="mt-4 space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  Custom template • {customConfigA.type.toUpperCase()}
+                </p>
+                {customConfigA.type === 'pdf' && (
+                  <p className="text-xs text-muted-foreground">
+                    PDF custom templates must be fillable PDF forms to work for generation.
+                  </p>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -178,15 +263,33 @@ export default function TemplateComparePage() {
           <CardContent>
             <select
               value={templateB}
-              onChange={(e) => setTemplateB(e.target.value as TemplateId)}
+              onChange={(e) => {
+                setTemplateB(e.target.value as TemplateId);
+                clearResults();
+              }}
               className="w-full p-2 border rounded-md"
             >
-              {allTemplates.map((template) => (
-                <option key={template.id} value={template.id}>
-                  {template.name}
-                </option>
-              ))}
+              <optgroup label="Built-in">
+                {builtInTemplates.map((template) => (
+                  <option key={template.id} value={template.id}>
+                    {template.name}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="Custom">
+                {customTemplates.map((template) => (
+                  <option key={template.id} value={`custom-${template.id}`}>
+                    {template.name} (Custom {template.type.toUpperCase()})
+                  </option>
+                ))}
+              </optgroup>
             </select>
+            {customLoading && (
+              <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                <LoadingSpinner size="sm" />
+                Loading custom templates…
+              </div>
+            )}
             {templateConfigB && (
               <div className="mt-4 space-y-2">
                 <div className="flex items-center space-x-2">
@@ -202,17 +305,33 @@ export default function TemplateComparePage() {
                 </p>
               </div>
             )}
+            {customConfigB && (
+              <div className="mt-4 space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  Custom template • {customConfigB.type.toUpperCase()}
+                </p>
+                {customConfigB.type === 'pdf' && (
+                  <p className="text-xs text-muted-foreground">
+                    PDF custom templates must be fillable PDF forms to work for generation.
+                  </p>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
 
       {/* Generate Button */}
       <div className="flex justify-center">
-        <Button onClick={generateComparison} disabled={loading || !resumeData} size="lg">
+        <Button
+          onClick={generateComparison}
+          disabled={loading || resumeLoading || !resumeData}
+          size="lg"
+        >
           {loading ? (
             <>
-              <Loading text="" />
-              <span className="ml-2">Generating Comparison...</span>
+              <LoadingSpinner size="sm" className="mr-2" />
+              Generating Comparison...
             </>
           ) : (
             <>
@@ -222,13 +341,22 @@ export default function TemplateComparePage() {
           )}
         </Button>
       </div>
+      {!resumeLoading && !resumeData && (
+        <p className="text-center text-sm text-muted-foreground">
+          No saved resume data found. Save your resume first in{' '}
+          <a className="underline" href="/edit-resume">
+            Edit Resume
+          </a>
+          .
+        </p>
+      )}
 
       {/* Comparison Results */}
       {generatedPDFs.a && generatedPDFs.b && (
         <div className="grid md:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
-              <CardTitle>{templateConfigA?.name}</CardTitle>
+              <CardTitle>{templateLabelA}</CardTitle>
               <CardDescription>Template A Preview</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -250,7 +378,12 @@ export default function TemplateComparePage() {
                 </Button>
                 <Button
                   className="flex-1"
-                  onClick={() => downloadPDF(generatedPDFs.a!, templateA)}
+                  onClick={() =>
+                    downloadPDF(
+                      generatedPDFs.a!,
+                      generatedPDFs.fileNameA || `resume_${String(templateA)}.pdf`
+                    )
+                  }
                 >
                   <Download className="mr-2 h-4 w-4" />
                   Download
@@ -261,7 +394,7 @@ export default function TemplateComparePage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>{templateConfigB?.name}</CardTitle>
+              <CardTitle>{templateLabelB}</CardTitle>
               <CardDescription>Template B Preview</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -283,7 +416,12 @@ export default function TemplateComparePage() {
                 </Button>
                 <Button
                   className="flex-1"
-                  onClick={() => downloadPDF(generatedPDFs.b!, templateB)}
+                  onClick={() =>
+                    downloadPDF(
+                      generatedPDFs.b!,
+                      generatedPDFs.fileNameB || `resume_${String(templateB)}.pdf`
+                    )
+                  }
                 >
                   <Download className="mr-2 h-4 w-4" />
                   Download

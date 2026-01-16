@@ -202,6 +202,9 @@ export function TemplateSelector({
           <h4 className="text-sm font-semibold">Custom Templates</h4>
           {customLoading && <LoadingSpinner size="sm" />}
         </div>
+        <p className="text-xs text-muted-foreground mt-1">
+          Note: PDF custom templates must be fillable PDF forms to work for generation.
+        </p>
         {customError && (
           <p className="text-xs text-destructive mt-1">{customError}</p>
         )}

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCustomTemplate, getDocument } from '@/lib/firebase/db-utils';
 import { AuthError, requireAuth } from '@/lib/firebase/server-auth';
 import { generateTemplatedResumePDF } from '@/lib/pdf/template-renderer';
-import { renderCustomTemplate } from '@/lib/pdf/custom-template-renderer';
+import { CustomTemplateRenderError, renderCustomTemplate } from '@/lib/pdf/custom-template-renderer';
 import { generateCoverLetterPDF, cleanCoverLetterContent } from '@/lib/pdf/cover-letter-generator';
 import { getAIProvider } from '@/lib/ai/provider';
 import { buildCoverLetterPrompt } from '@/lib/gemini/prompts';
@@ -86,6 +86,9 @@ export async function GET(request: NextRequest) {
     console.error('Error generating document PDF:', error);
     if (error instanceof AuthError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+    if (error instanceof CustomTemplateRenderError) {
+      return NextResponse.json({ error: error.message, code: error.code }, { status: error.status });
     }
     return NextResponse.json(
       { error: error.message || 'Failed to generate document PDF' },

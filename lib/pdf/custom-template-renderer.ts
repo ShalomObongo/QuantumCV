@@ -1,4 +1,5 @@
 import PDFDocument from 'pdfkit';
+import { PDFDocument as PDFLibDocument, PDFTextField } from 'pdf-lib';
 import { ResumeData } from '@/types';
 import { CustomTemplate } from '@/lib/firebase/db-utils';
 
@@ -6,6 +7,208 @@ import { CustomTemplate } from '@/lib/firebase/db-utils';
  * Custom Template Renderer
  * Renders resumes using user-uploaded custom templates (HTML or PDF)
  */
+
+export class CustomTemplateRenderError extends Error {
+  status: number;
+  code: string;
+
+  constructor(message: string, status: number = 400, code: string = 'CUSTOM_TEMPLATE_RENDER_ERROR') {
+    super(message);
+    this.name = 'CustomTemplateRenderError';
+    this.status = status;
+    this.code = code;
+  }
+}
+
+function normalizeFieldName(name: string): string {
+  return name
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+}
+
+function joinLines(lines: Array<string | undefined | null>): string {
+  return lines
+    .map((l) => (typeof l === 'string' ? l.trim() : ''))
+    .filter(Boolean)
+    .join('\n');
+}
+
+function buildDefaultPdfValues(resumeData: ResumeData): Record<string, string> {
+  const contact = resumeData.contactInfo;
+  const name = contact?.name || '';
+  const email = contact?.email || '';
+  const phone = contact?.phone || '';
+  const location = contact?.location || '';
+
+  const socialLinks = contact?.socialLinks || [];
+  const findSocial = (needles: string[]) => {
+    const needleSet = needles.map((n) => n.toLowerCase());
+    const hit = socialLinks.find((l) =>
+      needleSet.some((n) => l.platform?.toLowerCase().includes(n))
+    );
+    return hit?.url || '';
+  };
+
+  const linkedin = findSocial(['linkedin']);
+  const github = findSocial(['github']);
+  const website = findSocial(['website', 'portfolio', 'personal', 'site']);
+
+  const technicalSkills = resumeData.skills?.technical?.join(', ') || '';
+  const softSkills = resumeData.skills?.soft?.join(', ') || '';
+  const allSkills = [...(resumeData.skills?.technical || []), ...(resumeData.skills?.soft || [])].join(', ');
+
+  const experience = joinLines(
+    (resumeData.experience || []).flatMap((exp) => {
+      const header = joinLines([exp.title && exp.company ? `${exp.title} — ${exp.company}` : exp.title || exp.company, exp.date]);
+      const loc = exp.location ? exp.location : '';
+      const points = (exp.points || []).map((p) => `• ${p}`);
+      const achievements = (exp.achievements || []).map((a) => `• ${a}`);
+      return [header, loc, ...points, ...(achievements.length ? ['Key Achievements:', ...achievements] : []), ''];
+    })
+  );
+
+  const education = joinLines(
+    (resumeData.education || []).flatMap((edu) => {
+      const header = joinLines([edu.degree, edu.school, edu.location, edu.date]);
+      const details = joinLines([edu.grade ? `Grade: ${edu.grade}` : '', edu.details || '']);
+      return [header, details, ''];
+    })
+  );
+
+  const projects = joinLines(
+    (resumeData.projects || []).flatMap((proj) => {
+      const header = joinLines([proj.name, proj.role ? `Role: ${proj.role}` : '', proj.link ? `Link: ${proj.link}` : '']);
+      const desc = proj.description || '';
+      const tech = proj.technologies?.length ? `Technologies: ${proj.technologies.join(', ')}` : '';
+      return [header, desc, tech, ''];
+    })
+  );
+
+  const certifications = joinLines(
+    (resumeData.certifications || []).map((c) => joinLines([c.name, c.issuer ? `Issuer: ${c.issuer}` : '', c.date ? `Date: ${c.date}` : '']))
+  );
+
+  const languages = joinLines(
+    (resumeData.languages || []).map((l) => `${l.language}${l.level ? ` — ${l.level}` : ''}`)
+  );
+
+  return {
+    name,
+    full_name: name,
+    email,
+    phone,
+    location,
+    linkedin,
+    github,
+    website,
+    summary: resumeData.summary || '',
+    objective: resumeData.summary || '',
+    technical_skills: technicalSkills,
+    soft_skills: softSkills,
+    skills: allSkills,
+    all_skills: allSkills,
+    experience,
+    work_experience: experience,
+    employment: experience,
+    education,
+    projects,
+    certifications,
+    languages,
+    achievements: joinLines((resumeData.achievements || []).map((a) => `• ${a}`)),
+    interests: (resumeData.interests || []).join(', '),
+  };
+}
+
+function getValueForPdfField(
+  fieldName: string,
+  resumeData: ResumeData,
+  values: Record<string, string>
+): string | undefined {
+  const normalized = normalizeFieldName(fieldName);
+
+  // Direct / substring matches for common keys
+  const directKeys = [
+    'full_name',
+    'name',
+    'email',
+    'phone',
+    'location',
+    'linkedin',
+    'github',
+    'website',
+    'summary',
+    'objective',
+    'technical_skills',
+    'soft_skills',
+    'skills',
+    'all_skills',
+    'experience',
+    'work_experience',
+    'employment',
+    'education',
+    'projects',
+    'certifications',
+    'languages',
+    'achievements',
+    'interests',
+  ] as const;
+
+  for (const key of directKeys) {
+    if (normalized === key || normalized.includes(key)) {
+      const val = values[key];
+      if (val) return val;
+    }
+  }
+
+  // Indexed experience fields (experience_1_title, exp2_company, etc.)
+  const expMatch = normalized.match(/(experience|exp|work)[^0-9]*([0-9]+)/);
+  if (expMatch) {
+    const index = Math.max(1, Number(expMatch[2])) - 1;
+    const exp = resumeData.experience?.[index];
+    if (exp) {
+      if (normalized.includes('title') || normalized.includes('role') || normalized.includes('position')) return exp.title || '';
+      if (normalized.includes('company') || normalized.includes('employer')) return exp.company || '';
+      if (normalized.includes('date') || normalized.includes('duration')) return exp.date || '';
+      if (normalized.includes('location')) return exp.location || '';
+      if (normalized.includes('details') || normalized.includes('description') || normalized.includes('responsibilit')) {
+        return joinLines([...(exp.points || []).map((p) => `• ${p}`), ...(exp.achievements || []).map((a) => `• ${a}`)]);
+      }
+    }
+  }
+
+  // Indexed education fields (education_1_school, edu2_degree, etc.)
+  const eduMatch = normalized.match(/(education|edu|school|degree)[^0-9]*([0-9]+)/);
+  if (eduMatch) {
+    const index = Math.max(1, Number(eduMatch[2])) - 1;
+    const edu = resumeData.education?.[index];
+    if (edu) {
+      if (normalized.includes('degree')) return edu.degree || '';
+      if (normalized.includes('school') || normalized.includes('institution') || normalized.includes('university')) return edu.school || '';
+      if (normalized.includes('date') || normalized.includes('year')) return edu.date || '';
+      if (normalized.includes('location')) return edu.location || '';
+      if (normalized.includes('grade') || normalized.includes('gpa')) return edu.grade || '';
+      if (normalized.includes('details') || normalized.includes('description')) return edu.details || '';
+    }
+  }
+
+  // Indexed project fields (project_1_name, proj2_description, etc.)
+  const projMatch = normalized.match(/(project|proj)[^0-9]*([0-9]+)/);
+  if (projMatch) {
+    const index = Math.max(1, Number(projMatch[2])) - 1;
+    const proj = resumeData.projects?.[index];
+    if (proj) {
+      if (normalized.includes('name') || normalized.includes('title')) return proj.name || '';
+      if (normalized.includes('description') || normalized.includes('details')) return proj.description || '';
+      if (normalized.includes('role')) return proj.role || '';
+      if (normalized.includes('link') || normalized.includes('url')) return proj.link || '';
+      if (normalized.includes('tech') || normalized.includes('stack') || normalized.includes('tool')) return proj.technologies?.join(', ') || '';
+    }
+  }
+
+  return undefined;
+}
 
 /**
  * Render resume using custom HTML template
@@ -194,17 +397,60 @@ export async function renderPDFTemplate(
   // Decode base64 PDF
   const templateBuffer = Buffer.from(pdfTemplateBase64, 'base64');
 
-  // For PDF templates, we'll overlay text on top of the template
-  // This requires pdf-lib or similar library
-  // For now, return the template as-is with a note
+  // For PDF templates, we currently support *fillable* PDF forms (AcroForm).
+  // If a template isn't fillable, we return a clear error instead of silently returning the original template.
+  try {
+    const pdfDoc = await PDFLibDocument.load(templateBuffer);
+    const form = pdfDoc.getForm();
+    const fields = form.getFields();
+    const textFields = fields.filter(
+      (f) => f instanceof PDFTextField || (f as any)?.constructor?.name === 'PDFTextField'
+    ) as PDFTextField[];
 
-  // TODO: Implement PDF overlay with resume data using pdf-lib
-  // This would involve:
-  // 1. Load the PDF template
-  // 2. Add text fields with resume data at specified positions
-  // 3. Return the modified PDF
+    if (textFields.length === 0) {
+      throw new CustomTemplateRenderError(
+        'This PDF template has no fillable fields. Please upload a fillable PDF form (AcroForm) or use a built-in template.',
+        400,
+        'PDF_TEMPLATE_NOT_FILLABLE'
+      );
+    }
 
-  return templateBuffer;
+    const values = buildDefaultPdfValues(resumeData);
+    let filled = 0;
+    for (const field of textFields) {
+      const name = field.getName();
+      const value = getValueForPdfField(name, resumeData, values);
+      if (!value) continue;
+      try {
+        field.setText(value);
+        filled += 1;
+      } catch {
+        // Skip fields that fail to set (e.g., read-only or incompatible)
+      }
+    }
+
+    if (filled === 0) {
+      throw new CustomTemplateRenderError(
+        'This PDF template is fillable, but QuantumCV could not match any field names to your resume data. Rename your PDF form fields (e.g., name, email, phone, summary, skills, experience, education) or use a built-in template.',
+        400,
+        'PDF_TEMPLATE_FIELDS_UNMATCHED'
+      );
+    }
+
+    form.flatten();
+    const bytes = await pdfDoc.save();
+    return Buffer.from(bytes);
+  } catch (error) {
+    if (error instanceof CustomTemplateRenderError) {
+      throw error;
+    }
+    console.error('Custom PDF template rendering failed:', error);
+    throw new CustomTemplateRenderError(
+      'Failed to render the custom PDF template. Please ensure it is a valid fillable PDF form.',
+      400,
+      'PDF_TEMPLATE_RENDER_FAILED'
+    );
+  }
 }
 
 /**
